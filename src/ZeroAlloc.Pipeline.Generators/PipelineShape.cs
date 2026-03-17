@@ -5,21 +5,21 @@ namespace ZeroAlloc.Pipeline.Generators;
 /// Describes the delegate shape of a pipeline so <see cref="PipelineEmitter"/>
 /// can generate the correct nested static lambda call chain.
 /// </summary>
-public sealed class PipelineShape
+public sealed record PipelineShape
 {
     /// <summary>
     /// Concrete type arguments for <c>Handle&lt;...&gt;</c>.
     /// ZMediator: ["global::App.Ping", "string"].
     /// ZValidation: ["global::App.Order"].
     /// </summary>
-    public string[] TypeArguments { get; set; } = System.Array.Empty<string>();
+    public required string[] TypeArguments { get; init; }
 
     /// <summary>
     /// Parameter names at the outermost call site.
     /// ZMediator: ["request", "ct"].
     /// ZValidation: ["instance"].
     /// </summary>
-    public string[] OuterParameterNames { get; set; } = System.Array.Empty<string>();
+    public required string[] OuterParameterNames { get; init; }
 
     /// <summary>
     /// One prefix letter per outer parameter, used to name lambda params at each nesting level.
@@ -27,7 +27,7 @@ public sealed class PipelineShape
     /// ZMediator: ["r", "c"] → r1,c1  r2,c2 …
     /// ZValidation: ["r"] → r1  r2 …
     /// </summary>
-    public string[] LambdaParameterPrefixes { get; set; } = System.Array.Empty<string>();
+    public required string[] LambdaParameterPrefixes { get; init; }
 
     /// <summary>
     /// The body of the innermost (non-behavior) call, as a literal string.
@@ -38,7 +38,7 @@ public sealed class PipelineShape
     /// parameter names at the correct depth — the emitter will pass the final depth count.
     /// </para>
     /// </summary>
-    public string InnermostBodyTemplate { get; set; } = string.Empty;
+    public string InnermostBodyTemplate { get; init; } = string.Empty;
 
     /// <summary>
     /// Alternative to <see cref="InnermostBodyTemplate"/>.
@@ -47,5 +47,5 @@ public sealed class PipelineShape
     /// parameter names without the caller having to pre-compute the count.
     /// When set, takes precedence over <see cref="InnermostBodyTemplate"/>.
     /// </summary>
-    public System.Func<int, string>? InnermostBodyFactory { get; set; }
+    public System.Func<int, string>? InnermostBodyFactory { get; init; }
 }
