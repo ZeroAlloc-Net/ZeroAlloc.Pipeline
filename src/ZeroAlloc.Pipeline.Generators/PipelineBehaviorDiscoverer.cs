@@ -12,11 +12,34 @@ public static class PipelineBehaviorDiscoverer
     private const string IPipelineBehaviorFqn = "ZeroAlloc.Pipeline.IPipelineBehavior";
 
     /// <summary>
+    /// Per-symbol transform for use with
+    /// <c>context.SyntaxProvider.ForAttributeWithMetadataName</c> in incremental generators.
+    /// This is the preferred integration point — it lets Roslyn cache and diff at the syntax
+    /// level rather than re-scanning the whole compilation on every keystroke.
+    /// </summary>
+    public static PipelineBehaviorInfo? FromAttributeSyntaxContext(GeneratorAttributeSyntaxContext ctx)
+    {
+        var symbol = ctx.TargetSymbol as INamedTypeSymbol;
+        if (symbol == null) return null;
+
+        // ForAttributeWithMetadataName already matched the attribute; take the first one.
+        var pipelineAttr = ctx.Attributes.FirstOrDefault();
+        if (pipelineAttr == null) return null;
+
+        return BuildBehaviorInfo(symbol, pipelineAttr, ctx.SemanticModel);
+    }
+
+    /// <summary>
     /// Discovers all pipeline behaviors in <paramref name="compilation"/>.
     /// Detects both direct <c>ZeroAlloc.Pipeline.PipelineBehaviorAttribute</c> usage and
     /// any subclasses of it (e.g. <c>ZeroAlloc.Mediator.PipelineBehaviorAttribute</c>).
     /// Falls back to syntax-level argument parsing when semantic information is unavailable
     /// (e.g., incomplete compilations missing runtime references).
+    /// <para>
+    /// Prefer <see cref="FromAttributeSyntaxContext"/> with
+    /// <c>ForAttributeWithMetadataName</c> in production generators for better incremental
+    /// performance. This overload is retained for test use and one-shot tool scenarios.
+    /// </para>
     /// </summary>
     public static IEnumerable<PipelineBehaviorInfo> Discover(Compilation compilation)
     {
@@ -72,13 +95,20 @@ public static class PipelineBehaviorDiscoverer
         }
         if (pipelineAttr == null) return null;
 
+        return BuildBehaviorInfo(symbol, pipelineAttr, semanticModel);
+    }
+
+    private static PipelineBehaviorInfo? BuildBehaviorInfo(
+        INamedTypeSymbol symbol,
+        AttributeData pipelineAttr,
+        SemanticModel semanticModel)
+    {
         // Must implement IPipelineBehavior (or a sub-interface)
         var implementsPipeline = symbol.AllInterfaces.Any(i => InheritsFrom(i, IPipelineBehaviorFqn));
         if (!implementsPipeline) return null;
 
         var behaviorTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        // Get the attribute syntax for fallback parsing
         var attrSyntax = pipelineAttr.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax;
 
         var order = ReadOrder(pipelineAttr, attrSyntax);

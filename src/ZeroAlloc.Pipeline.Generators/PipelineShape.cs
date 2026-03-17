@@ -30,9 +30,22 @@ public sealed class PipelineShape
     public string[] LambdaParameterPrefixes { get; set; } = System.Array.Empty<string>();
 
     /// <summary>
-    /// The body of the innermost (non-behavior) call.
+    /// The body of the innermost (non-behavior) call, as a literal string.
     /// Use the lambda param names as they appear at the deepest nesting level.
     /// Example (ZMediator, 2 behaviors): "{ var h = factory?.Invoke() ?? new Handler(); return h.Handle(r2, c2); }"
+    /// <para>
+    /// Prefer <see cref="InnermostBodyFactory"/> when the body needs to embed the lambda
+    /// parameter names at the correct depth — the emitter will pass the final depth count.
+    /// </para>
     /// </summary>
     public string InnermostBodyTemplate { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Alternative to <see cref="InnermostBodyTemplate"/>.
+    /// Called by <see cref="PipelineEmitter.EmitChain"/> with the resolved behavior depth
+    /// (i.e. the number of applicable behaviors) so the body can embed the correct lambda
+    /// parameter names without the caller having to pre-compute the count.
+    /// When set, takes precedence over <see cref="InnermostBodyTemplate"/>.
+    /// </summary>
+    public System.Func<int, string>? InnermostBodyFactory { get; set; }
 }

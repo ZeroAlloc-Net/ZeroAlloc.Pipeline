@@ -18,6 +18,22 @@ public class PipelineBehaviorDiscovererTests
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
     }
 
+    /// <summary>
+    /// Creates a compilation with NO ZeroAlloc.Pipeline assembly reference.
+    /// All types are defined inline, simulating the case where Roslyn may not be able to
+    /// resolve the base attribute chain via normal metadata — exercising the
+    /// <c>ResolveAttributeClassFromSyntax</c> fallback in <see cref="PipelineBehaviorDiscoverer"/>.
+    /// </summary>
+    private static Compilation CreateCompilationWithoutPipelineAssembly(string source)
+    {
+        var syntaxTree = CSharpSyntaxTree.ParseText(source);
+        return CSharpCompilation.Create(
+            "TestAssembly",
+            [syntaxTree],
+            [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
     [Fact]
     public void Discover_BehaviorWithAttribute_ReturnsInfo()
     {
@@ -66,7 +82,7 @@ public class PipelineBehaviorDiscovererTests
 
         Assert.Single(results);
         Assert.NotNull(results[0].AppliesTo);
-        Assert.Contains("MyModel", results[0].AppliesTo);
+        Assert.Contains("MyModel", results[0].AppliesTo!, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -98,6 +114,48 @@ public class PipelineBehaviorDiscovererTests
 
         Assert.Single(results);
         Assert.Equal(-1, results[0].HandleMethodTypeParameterCount);
+    }
+
+    [Fact]
+    public void Discover_SubclassedAttribute_WithoutPipelineAssembly_IsDetected()
+    {
+        // All types (attribute base, interface, subclass attribute, behavior) are defined
+        // inline — no ZeroAlloc.Pipeline assembly reference in this compilation.
+        // This exercises discovery when Roslyn must fall back to syntax-level resolution
+        // of the attribute base type chain.
+        var source = """
+            using System;
+
+            namespace ZeroAlloc.Pipeline
+            {
+                [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+                public class PipelineBehaviorAttribute : Attribute
+                {
+                    public PipelineBehaviorAttribute(int order = 0) { Order = order; }
+                    public int Order { get; set; }
+                    public Type? AppliesTo { get; set; }
+                }
+                public interface IPipelineBehavior { }
+            }
+
+            public sealed class MediatorPipelineBehaviorAttribute : ZeroAlloc.Pipeline.PipelineBehaviorAttribute
+            {
+                public MediatorPipelineBehaviorAttribute(int order = 0) : base(order) { }
+            }
+
+            [MediatorPipelineBehavior(Order = 5)]
+            public class MyBehavior : ZeroAlloc.Pipeline.IPipelineBehavior
+            {
+                public static string Handle<T>(T r, System.Func<T, string> next) => next(r);
+            }
+            """;
+
+        var compilation = CreateCompilationWithoutPipelineAssembly(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Single(results);
+        Assert.Equal(5, results[0].Order);
+        Assert.Equal(1, results[0].HandleMethodTypeParameterCount);
     }
 
     [Fact]

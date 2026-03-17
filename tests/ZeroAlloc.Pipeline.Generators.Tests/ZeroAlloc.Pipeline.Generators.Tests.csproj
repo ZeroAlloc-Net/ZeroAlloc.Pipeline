@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- HLQ005 flags xUnit's Assert.Single() as if it were LINQ's Single() — false positive in test code. -->
+    <NoWarn>$(NoWarn);HLQ005</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />

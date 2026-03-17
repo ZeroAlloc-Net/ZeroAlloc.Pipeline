@@ -64,9 +64,9 @@ public class PipelineEmitterTests
 
         var result = PipelineEmitter.EmitChain(behaviors, shape);
 
-        Assert.Contains("LoggingBehavior.Handle<global::App.Ping, string>", result);
-        Assert.Contains("request, ct", result);
-        Assert.Contains("static (r1, c1)", result);
+        Assert.Contains("LoggingBehavior.Handle<global::App.Ping, string>", result, StringComparison.Ordinal);
+        Assert.Contains("request, ct", result, StringComparison.Ordinal);
+        Assert.Contains("static (r1, c1)", result, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -84,11 +84,11 @@ public class PipelineEmitterTests
         var result = PipelineEmitter.EmitChain(behaviors, shape);
 
         // Outer uses original params
-        Assert.Contains("LoggingBehavior.Handle<global::App.Ping, string>(\n                request, ct,", result);
+        Assert.Contains("LoggingBehavior.Handle<global::App.Ping, string>(\n                request, ct,", result, StringComparison.Ordinal);
         // Inner uses lambda params
-        Assert.Contains("ValidationBehavior.Handle<global::App.Ping, string>", result);
-        Assert.Contains("r1, c1,", result);
-        Assert.Contains("static (r2, c2)", result);
+        Assert.Contains("ValidationBehavior.Handle<global::App.Ping, string>", result, StringComparison.Ordinal);
+        Assert.Contains("r1, c1,", result, StringComparison.Ordinal);
+        Assert.Contains("static (r2, c2)", result, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -104,8 +104,31 @@ public class PipelineEmitterTests
 
         var result = PipelineEmitter.EmitChain(behaviors, shape);
 
-        Assert.Contains("CachingBehavior.Handle<global::App.Order>", result);
-        Assert.Contains("instance,", result);
-        Assert.Contains("static (r1)", result);
+        Assert.Contains("CachingBehavior.Handle<global::App.Order>", result, StringComparison.Ordinal);
+        Assert.Contains("instance,", result, StringComparison.Ordinal);
+        Assert.Contains("static (r1)", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EmitChain_InnermostBodyFactory_ReceivesDepth()
+    {
+        var behaviors = new[]
+        {
+            new PipelineBehaviorInfo("global::App.LoggingBehavior", 0, null, 2),
+            new PipelineBehaviorInfo("global::App.ValidationBehavior", 1, null, 2),
+        };
+        var shape = new PipelineShape
+        {
+            TypeArguments = ["global::App.Ping", "string"],
+            OuterParameterNames = ["request", "ct"],
+            LambdaParameterPrefixes = ["r", "c"],
+            InnermostBodyFactory = depth => $"{{ return h.Handle(r{depth}, c{depth}); }}",
+        };
+
+        var result = PipelineEmitter.EmitChain(behaviors, shape);
+
+        // Factory was called with depth=2, so innermost body uses r2,c2
+        Assert.Contains("static (r2, c2)", result, StringComparison.Ordinal);
+        Assert.Contains("h.Handle(r2, c2)", result, StringComparison.Ordinal);
     }
 }

@@ -26,18 +26,22 @@ public static class PipelineEmitter
             throw new System.ArgumentException("LambdaParameterPrefixes must contain at least one prefix.", nameof(shape));
         if (shape.OuterParameterNames == null || shape.OuterParameterNames.Length == 0)
             throw new System.ArgumentException("OuterParameterNames must contain at least one parameter name.", nameof(shape));
-        if (string.IsNullOrEmpty(shape.InnermostBodyTemplate))
-            throw new System.ArgumentException("InnermostBodyTemplate must not be null or empty.", nameof(shape));
+        if (shape.InnermostBodyFactory == null && string.IsNullOrEmpty(shape.InnermostBodyTemplate))
+            throw new System.ArgumentException("Either InnermostBodyFactory or InnermostBodyTemplate must be set.", nameof(shape));
+
+        var depth = behaviors.Count;
+        var innermostBody = shape.InnermostBodyFactory != null
+            ? shape.InnermostBodyFactory(depth)
+            : shape.InnermostBodyTemplate;
 
         if (behaviors.Count == 0)
-            return shape.InnermostBodyTemplate;
+            return innermostBody;
 
         var typeArgs = "<" + string.Join(", ", shape.TypeArguments) + ">";
-        var depth = behaviors.Count;
 
         // Build innermost lambda: static (r{depth}, c{depth}) => { ... }
         var lambdaParams = BuildLambdaParams(shape.LambdaParameterPrefixes, depth);
-        var innermost = $"static {lambdaParams} =>\n                    {shape.InnermostBodyTemplate}";
+        var innermost = $"static {lambdaParams} =>\n                    {innermostBody}";
 
         var result = innermost;
 
