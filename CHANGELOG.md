@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.1...v0.1.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* add PackageReadmeFile and PackageIcon to show README on NuGet.org ([7dd8823](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/7dd882369443ec6f6c85ec56d6a7e5dfa1713f83))
+* add PackageReadmeFile and PackageIcon to show README on NuGet.org ([1f89051](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/1f890511a6ea789fa664862105b1e4de6b18cd16))
+
 ## [0.1.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.0...v0.1.1) (2026-03-17)
 
 
