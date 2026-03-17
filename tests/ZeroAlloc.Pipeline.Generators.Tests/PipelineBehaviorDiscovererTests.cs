@@ -159,6 +159,34 @@ public class PipelineBehaviorDiscovererTests
     }
 
     [Fact]
+    public void Discover_BehaviorWithInheritedHandle_ReturnsCorrectTypeParamCount()
+    {
+        var source = """
+            using ZeroAlloc.Pipeline;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public abstract class BaseBehavior : IPipelineBehavior
+            {
+                public static ValueTask<TResponse> Handle<TRequest, TResponse>(
+                    TRequest request, CancellationToken ct,
+                    System.Func<TRequest, CancellationToken, ValueTask<TResponse>> next)
+                    where TRequest : class
+                    => next(request, ct);
+            }
+
+            [PipelineBehavior(Order = 1)]
+            public class ConcreteBehavior : BaseBehavior { }
+            """;
+
+        var compilation = CreateCompilation(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Single(results);
+        Assert.Equal(2, results[0].HandleMethodTypeParameterCount);
+    }
+
+    [Fact]
     public void Discover_SubclassedAttribute_IsDetected()
     {
         var source = """

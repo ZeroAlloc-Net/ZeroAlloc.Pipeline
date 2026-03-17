@@ -263,16 +263,21 @@ public static class PipelineBehaviorDiscoverer
 
     private static int GetHandleMethodTypeParamCount(INamedTypeSymbol symbol)
     {
-        foreach (var member in symbol.GetMembers())
+        var current = symbol;
+        while (current != null && current.SpecialType != SpecialType.System_Object)
         {
-            if (member is IMethodSymbol method
-                && method.Name == "Handle"
-                && method.IsStatic
-                && method.DeclaredAccessibility == Accessibility.Public
-                && method.TypeParameters.Length > 0)
+            foreach (var member in current.GetMembers())
             {
-                return method.TypeParameters.Length;
+                if (member is IMethodSymbol method
+                    && method.Name == "Handle"
+                    && method.IsStatic
+                    && method.DeclaredAccessibility == Accessibility.Public
+                    && method.TypeParameters.Length > 0)
+                {
+                    return method.TypeParameters.Length;
+                }
             }
+            current = current.BaseType;
         }
         return -1;
     }
