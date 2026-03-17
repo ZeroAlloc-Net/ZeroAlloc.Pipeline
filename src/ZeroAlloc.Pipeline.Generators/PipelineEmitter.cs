@@ -6,6 +6,9 @@ namespace ZeroAlloc.Pipeline.Generators;
 
 public static class PipelineEmitter
 {
+    private const string Indent1 = "\n                ";
+    private const string Indent2 = "\n                    ";
+
     /// <summary>
     /// Emits a nested static lambda call chain for the given behaviors and shape.
     /// </summary>
@@ -41,7 +44,7 @@ public static class PipelineEmitter
 
         // Build innermost lambda: static (r{depth}, c{depth}) => { ... }
         var lambdaParams = BuildLambdaParams(shape.LambdaParameterPrefixes, depth);
-        var innermost = $"static {lambdaParams} =>\n                    {innermostBody}";
+        var innermost = $"static {lambdaParams} =>{Indent2}{innermostBody}";
 
         var result = innermost;
 
@@ -52,14 +55,14 @@ public static class PipelineEmitter
             {
                 // Outermost: use the real parameter names
                 var outerParams = string.Join(", ", shape.OuterParameterNames);
-                result = $"{behavior.BehaviorTypeName}.Handle{typeArgs}(\n                {outerParams}, {result})";
+                result = $"{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent1}{outerParams}, {result})";
             }
             else
             {
                 // Intermediate: wrap in a lambda using level-i param names
                 var levelParams = BuildLambdaParams(shape.LambdaParameterPrefixes, i);
                 var levelParamRefs = BuildParamRefs(shape.LambdaParameterPrefixes, i);
-                result = $"static {levelParams} =>\n                {behavior.BehaviorTypeName}.Handle{typeArgs}(\n                    {levelParamRefs}, {result})";
+                result = $"static {levelParams} =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParamRefs}, {result})";
             }
         }
 
