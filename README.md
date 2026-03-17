@@ -66,7 +66,8 @@ ZeroAlloc.Pipeline emits static nested lambda chains instead of runtime-resolved
 - **Attribute subclassing** — framework packages define their own alias; discovery follows the inheritance chain
 - **Compile-time discovery** — `PipelineBehaviorDiscoverer` and `FromAttributeSyntaxContext` for incremental generators
 - **Static emitter** — `PipelineEmitter.EmitChain` generates a nested static lambda chain from a behavior list and a `PipelineShape`
-- **Diagnostic rules** — `PipelineDiagnosticRules` for missing `Handle` methods and duplicate `Order` values
+- **`PipelineShape`** — describes type arguments, parameter names, and the innermost body; supports a factory delegate when the body embeds depth-indexed lambda names
+- **Diagnostic helpers** — `PipelineDiagnosticRules.FindMissingHandleMethod` and `FindDuplicateOrders` return offending behaviors; the caller maps them to framework-specific diagnostic IDs
 - **Zero allocation** — no reflection, no boxing, no delegate list per call
 - **netstandard2.0 + Native AOT** — works in trimmed, ahead-of-time compiled applications
 
