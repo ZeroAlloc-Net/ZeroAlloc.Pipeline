@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
+    <PackageId>ZeroAlloc.Pipeline</PackageId>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Description>Shared pipeline behavior contracts for ZeroAlloc source-generated libraries.</Description>
+    <PackageTags>pipeline;source-generator;zero-allocation;roslyn</PackageTags>
+  </PropertyGroup>
+</Project>

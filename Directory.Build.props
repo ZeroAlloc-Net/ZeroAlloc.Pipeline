@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Authors>Marcel Roozekrans</Authors>
+    <Company>Marcel Roozekrans</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>Copyright (c) Marcel Roozekrans</Copyright>
+  </PropertyGroup>
+</Project>

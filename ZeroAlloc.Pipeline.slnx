@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZeroAlloc.Pipeline/ZeroAlloc.Pipeline.csproj" />
+    <Project Path="src/ZeroAlloc.Pipeline.Generators/ZeroAlloc.Pipeline.Generators.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZeroAlloc.Pipeline.Generators.Tests/ZeroAlloc.Pipeline.Generators.Tests.csproj" />
+  </Folder>
+</Solution>
