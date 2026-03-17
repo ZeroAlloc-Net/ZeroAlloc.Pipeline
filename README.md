@@ -49,15 +49,15 @@ public class LoggingBehavior : IPipelineBehavior
 
 ## Performance
 
-ZeroAlloc.Pipeline emits static nested lambda chains instead of runtime-resolved delegate lists. This eliminates allocations for the pipeline dispatch itself.
+ZeroAlloc.Pipeline emits static nested lambda chains. Static lambdas carry no closure allocation, and the JIT inlines static call chains aggressively — collapsing N behaviors into straight-line code.
 
-| Operation | ZeroAlloc.Pipeline chain (ns) | Reflection-based (ns) | Speedup | Alloc |
-|-----------|-------------------------------|-----------------------|---------|-------|
-| 1 behavior | 8 | 310 | ~39× | 0 B |
-| 3 behaviors | 21 | 890 | ~42× | 0 B |
-| 5 behaviors | 34 | 1 450 | ~43× | 0 B |
+| | 1 behavior | 3 behaviors | 5 behaviors | Allocated |
+|---|:---:|:---:|:---:|:---:|
+| **Static chain** | 4.1 ns | 2.3 ns | 2.8 ns | **0 B** |
+| Pre-built delegate chain | 2.2 ns | 9.9 ns | 17.6 ns | 0 B |
+| Speedup | 0.5× | **4.3×** | **6.4×** | — |
 
-\* Illustrative estimates; see [docs/performance.md](docs/performance.md) for methodology.
+BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests/ZeroAlloc.Pipeline.Benchmarks`](tests/ZeroAlloc.Pipeline.Benchmarks)
 
 ## Features
 

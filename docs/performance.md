@@ -45,16 +45,28 @@ Behaviors are resolved by the generator — the compiled output contains direct 
 
 ## Benchmark Results
 
-> Benchmarks run on .NET 10, BenchmarkDotNet, AMD Ryzen 9 5950X. Illustrative estimates — actual numbers depend on behavior complexity.
+BenchmarkDotNet v0.15.8, Windows 11, 12th Gen Intel Core i9-12900HK 2.50 GHz, .NET 10.0.4 — [`tests/ZeroAlloc.Pipeline.Benchmarks`](../tests/ZeroAlloc.Pipeline.Benchmarks).
 
-| Method | Library | Mean | Allocated |
-|--------|---------|------|-----------|
-| 1 behavior | ZeroAlloc.Pipeline | 8 ns | 0 B |
-| 1 behavior | Reflection-based | 310 ns | 192 B |
-| 3 behaviors | ZeroAlloc.Pipeline | 21 ns | 0 B |
-| 3 behaviors | Reflection-based | 890 ns | 576 B |
-| 5 behaviors | ZeroAlloc.Pipeline | 34 ns | 0 B |
-| 5 behaviors | Reflection-based | 1 450 ns | 960 B |
+The comparison is **static chain** (what `PipelineEmitter.EmitChain` generates) vs a **pre-built delegate chain** (interface-based pipeline with chain allocated once at startup, not per call — the best achievable runtime alternative).
+
+| Method | Categories | Mean | Ratio | Allocated |
+|--------|------------|-----:|------:|----------:|
+| Static chain | 0 behaviors | 0.06 ns | — | 0 B |
+| Pre-built delegate chain | 0 behaviors | 1.04 ns | — | 0 B |
+| | | | | |
+| Static chain | 1 behavior | 4.11 ns | 1.00 | 0 B |
+| Pre-built delegate chain | 1 behavior | 2.16 ns | 0.53 | 0 B |
+| | | | | |
+| Static chain | 3 behaviors | 2.33 ns | 1.00 | 0 B |
+| Pre-built delegate chain | 3 behaviors | 9.93 ns | 4.25 | 0 B |
+| | | | | |
+| Static chain | 5 behaviors | 2.76 ns | 1.00 | 0 B |
+| Pre-built delegate chain | 5 behaviors | 17.62 ns | 6.38 | 0 B |
+
+**Key observations:**
+- Both approaches allocate **0 B** per call when the delegate chain is pre-built.
+- For 1 behavior, the pre-built delegate is ~2× faster — the JIT pays a small generic specialization cost on the single-level static chain.
+- For 3+ behaviors, the static chain wins decisively (4–6×) because the JIT inlines static calls transitively, collapsing the entire chain into straight-line code. Delegate dispatch cannot inline across virtual call sites.
 
 ## Static vs Reflection Dispatch
 
