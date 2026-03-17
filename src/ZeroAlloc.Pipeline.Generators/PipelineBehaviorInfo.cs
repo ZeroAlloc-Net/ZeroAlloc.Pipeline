@@ -56,4 +56,10 @@ public sealed class PipelineBehaviorInfo : IEquatable<PipelineBehaviorInfo>
             return hash;
         }
     }
+
+    public static bool operator ==(PipelineBehaviorInfo? left, PipelineBehaviorInfo? right)
+        => left is null ? right is null : left.Equals(right);
+
+    public static bool operator !=(PipelineBehaviorInfo? left, PipelineBehaviorInfo? right)
+        => !(left == right);
 }
