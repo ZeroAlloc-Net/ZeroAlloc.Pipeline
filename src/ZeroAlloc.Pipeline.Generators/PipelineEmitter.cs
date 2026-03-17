@@ -26,6 +26,8 @@ public static class PipelineEmitter
             throw new System.ArgumentException("LambdaParameterPrefixes must contain at least one prefix.", nameof(shape));
         if (shape.OuterParameterNames == null || shape.OuterParameterNames.Length == 0)
             throw new System.ArgumentException("OuterParameterNames must contain at least one parameter name.", nameof(shape));
+        if (string.IsNullOrEmpty(shape.InnermostBodyTemplate))
+            throw new System.ArgumentException("InnermostBodyTemplate must not be null or empty.", nameof(shape));
 
         if (behaviors.Count == 0)
             return shape.InnermostBodyTemplate;
