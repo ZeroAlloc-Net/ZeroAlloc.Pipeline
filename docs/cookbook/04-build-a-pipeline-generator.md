@@ -1,3 +1,11 @@
+---
+id: cookbook-build-a-pipeline-generator
+title: "Cookbook: Build a Pipeline Generator"
+slug: /docs/cookbook/build-a-pipeline-generator
+description: Wire PipelineBehaviorDiscoverer, PipelineShape, and PipelineEmitter inside an IIncrementalGenerator.
+sidebar_position: 4
+---
+
 # Cookbook: Build a Pipeline Generator
 
 Wire `PipelineBehaviorDiscoverer`, `PipelineShape`, and `PipelineEmitter` together inside an `IIncrementalGenerator`.

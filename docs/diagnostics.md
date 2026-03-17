@@ -113,6 +113,8 @@ foreach (var group in dupeGroups)
 
 ## Suppressing Warnings
 
+> **Note:** `ZAP001` and `ZAP002` are the reference codes used throughout this documentation. The actual diagnostic ID emitted to the user depends on the host generator (e.g. ZeroAlloc.Mediator may emit `ZAM001`). Check your generator's documentation for the exact codes to suppress.
+
 Using `#pragma`:
 
 ```csharp

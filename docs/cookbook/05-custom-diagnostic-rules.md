@@ -1,3 +1,11 @@
+---
+id: cookbook-custom-diagnostic-rules
+title: "Cookbook: Custom Diagnostic Rules"
+slug: /docs/cookbook/custom-diagnostic-rules
+description: Report ZAPxxx-style diagnostics from your own generator using PipelineDiagnosticRules.
+sidebar_position: 5
+---
+
 # Cookbook: Custom Diagnostic Rules
 
 Report `ZAPxxx`-style diagnostics from your own generator using `PipelineDiagnosticRules`.

@@ -1,3 +1,11 @@
+---
+id: cookbook-logging-behavior
+title: "Cookbook: Logging Behavior"
+slug: /docs/cookbook/logging-behavior
+description: Add structured request/response logging to every pipeline call using a static behavior.
+sidebar_position: 1
+---
+
 # Cookbook: Logging Behavior
 
 Add structured request/response logging to every pipeline call without modifying a single handler.

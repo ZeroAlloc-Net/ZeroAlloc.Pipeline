@@ -1,3 +1,11 @@
+---
+id: cookbook-scoped-behavior-appliesto
+title: "Cookbook: Scoped Behavior with AppliesTo"
+slug: /docs/cookbook/scoped-behavior-appliesto
+description: Restrict a behavior to a single request type at compile time using AppliesTo.
+sidebar_position: 2
+---
+
 # Cookbook: Scoped Behavior with AppliesTo
 
 Restrict a behavior to a single request type using the `AppliesTo` property — resolved at compile time, no runtime branching.
@@ -16,14 +24,14 @@ using ZeroAlloc.Pipeline;
 [PipelineBehavior(Order = 2, AppliesTo = typeof(CreateOrderCommand))]
 public class OrderValidationBehavior : IPipelineBehavior
 {
-    public static async ValueTask<Result> Handle<TRequest, TResponse>(
+    public static async ValueTask<TResponse> Handle<TRequest, TResponse>(
         TRequest request,
         CancellationToken ct,
         Func<TRequest, CancellationToken, ValueTask<TResponse>> next)
         where TRequest : CreateOrderCommand
     {
         if (request.Items.Count == 0)
-            return Result.Failure("Order must have at least one item");
+            throw new InvalidOperationException("Order must have at least one item");
 
         return await next(request, ct);
     }

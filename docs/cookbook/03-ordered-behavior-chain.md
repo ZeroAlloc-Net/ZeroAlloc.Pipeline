@@ -1,3 +1,11 @@
+---
+id: cookbook-ordered-behavior-chain
+title: "Cookbook: Ordered Behavior Chain"
+slug: /docs/cookbook/ordered-behavior-chain
+description: Compose authentication, logging, and validation behaviors in a deterministic order.
+sidebar_position: 3
+---
+
 # Cookbook: Ordered Behavior Chain
 
 Compose authentication, logging, and validation behaviors in a deterministic order using `Order`.

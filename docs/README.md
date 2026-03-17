@@ -64,7 +64,7 @@ var shape = new PipelineShape
     TypeArguments           = ["global::App.Ping", "string"],
     OuterParameterNames     = ["request", "ct"],
     LambdaParameterPrefixes = ["r", "c"],
-    InnermostBodyTemplate   = "{ var h = new PingHandler(); return h.Handle(r1, c1); }",
+    InnermostBodyFactory    = depth => $"{{ var h = new PingHandler(); return h.Handle(r{depth}, c{depth}); }}",
 };
 string chain = PipelineEmitter.EmitChain(behaviors, shape);
 ```
