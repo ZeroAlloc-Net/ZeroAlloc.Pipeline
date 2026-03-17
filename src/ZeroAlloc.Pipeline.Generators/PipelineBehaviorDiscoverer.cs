@@ -139,10 +139,10 @@ public static class PipelineBehaviorDiscoverer
         var attrSyntax = attr.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax;
         if (attrSyntax == null) return null;
 
-        // The attribute name in syntax (e.g. "MediatorPipelineBehavior" or "MediatorPipelineBehaviorAttribute")
         var attrName = attrSyntax.Name.ToString();
 
-        // Search all syntax trees in the compilation for a class with this name.
+        var candidates = new System.Collections.Generic.List<INamedTypeSymbol>();
+
         foreach (var syntaxTree in semanticModel.Compilation.SyntaxTrees)
         {
             var sm = semanticModel.Compilation.GetSemanticModel(syntaxTree);
@@ -153,18 +153,18 @@ public static class PipelineBehaviorDiscoverer
             foreach (var classDecl in classDecls)
             {
                 var name = classDecl.Identifier.Text;
-                // Match by name, accounting for the implicit "Attribute" suffix convention
                 if (name == attrName
                     || name == attrName + "Attribute"
                     || (attrName.EndsWith("Attribute") && name == attrName.Substring(0, attrName.Length - "Attribute".Length)))
                 {
                     var classSymbol = sm.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-                    if (classSymbol != null) return classSymbol;
+                    if (classSymbol != null)
+                        candidates.Add(classSymbol);
                 }
             }
         }
 
-        return null;
+        return candidates.Count == 1 ? candidates[0] : null;
     }
 
     private static bool InheritsFrom(INamedTypeSymbol symbol, string fullName)
