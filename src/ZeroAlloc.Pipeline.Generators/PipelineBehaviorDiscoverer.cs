@@ -141,7 +141,7 @@ public static class PipelineBehaviorDiscoverer
 
         var attrName = attrSyntax.Name.ToString();
 
-        var candidates = new System.Collections.Generic.List<INamedTypeSymbol>();
+        var candidates = new List<INamedTypeSymbol>();
 
         foreach (var syntaxTree in semanticModel.Compilation.SyntaxTrees)
         {
