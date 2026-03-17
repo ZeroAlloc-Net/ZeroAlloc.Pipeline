@@ -45,11 +45,15 @@ public static class PipelineBehaviorDiscoverer
     {
         foreach (var syntaxTree in compilation.SyntaxTrees)
         {
-            var semanticModel = compilation.GetSemanticModel(syntaxTree);
             var classDeclarations = syntaxTree.GetRoot()
                 .DescendantNodes()
                 .OfType<ClassDeclarationSyntax>()
-                .Where(c => c.AttributeLists.Count > 0);
+                .Where(c => c.AttributeLists.Count > 0)
+                .ToList();
+
+            if (classDeclarations.Count == 0) continue;
+
+            var semanticModel = compilation.GetSemanticModel(syntaxTree);
 
             foreach (var classDecl in classDeclarations)
             {
