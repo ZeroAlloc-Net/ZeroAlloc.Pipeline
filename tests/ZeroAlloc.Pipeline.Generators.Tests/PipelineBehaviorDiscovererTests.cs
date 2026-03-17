@@ -82,7 +82,7 @@ public class PipelineBehaviorDiscovererTests
 
         Assert.Single(results);
         Assert.NotNull(results[0].AppliesTo);
-        Assert.Contains("MyModel", results[0].AppliesTo!, StringComparison.Ordinal);
+        Assert.Equal("global::MyModel", results[0].AppliesTo);
     }
 
     [Fact]
