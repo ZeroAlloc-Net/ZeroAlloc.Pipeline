@@ -1,0 +1,129 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+
+namespace ZeroAlloc.Pipeline.Generators.Tests;
+
+public class PipelineBehaviorDiscovererTests
+{
+    private static Compilation CreateCompilation(string source)
+    {
+        var syntaxTree = CSharpSyntaxTree.ParseText(source);
+        return CSharpCompilation.Create(
+            "TestAssembly",
+            [syntaxTree],
+            [
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(IPipelineBehavior).Assembly.Location),
+            ],
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    [Fact]
+    public void Discover_BehaviorWithAttribute_ReturnsInfo()
+    {
+        var source = """
+            using ZeroAlloc.Pipeline;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [PipelineBehavior(Order = 1)]
+            public class MyBehavior : IPipelineBehavior
+            {
+                public static ValueTask<TResponse> Handle<TRequest, TResponse>(
+                    TRequest request, CancellationToken ct,
+                    System.Func<TRequest, CancellationToken, ValueTask<TResponse>> next)
+                    where TRequest : class
+                    => next(request, ct);
+            }
+            """;
+
+        var compilation = CreateCompilation(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Single(results);
+        Assert.Equal(1, results[0].Order);
+        Assert.Equal(2, results[0].HandleMethodTypeParameterCount);
+        Assert.Null(results[0].AppliesTo);
+    }
+
+    [Fact]
+    public void Discover_BehaviorWithAppliesTo_SetsAppliesTo()
+    {
+        var source = """
+            using ZeroAlloc.Pipeline;
+
+            public class MyModel { }
+
+            [PipelineBehavior(AppliesTo = typeof(MyModel))]
+            public class ScopedBehavior : IPipelineBehavior
+            {
+                public static string Handle<T>(T instance, System.Func<T, string> next) => next(instance);
+            }
+            """;
+
+        var compilation = CreateCompilation(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Single(results);
+        Assert.NotNull(results[0].AppliesTo);
+        Assert.Contains("MyModel", results[0].AppliesTo);
+    }
+
+    [Fact]
+    public void Discover_ClassWithoutAttribute_IsIgnored()
+    {
+        var source = """
+            using ZeroAlloc.Pipeline;
+            public class NotABehavior : IPipelineBehavior { }
+            """;
+
+        var compilation = CreateCompilation(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Empty(results);
+    }
+
+    [Fact]
+    public void Discover_BehaviorWithoutHandleMethod_ReturnsNegativeTypeParamCount()
+    {
+        var source = """
+            using ZeroAlloc.Pipeline;
+
+            [PipelineBehavior]
+            public class NoHandleBehavior : IPipelineBehavior { }
+            """;
+
+        var compilation = CreateCompilation(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Single(results);
+        Assert.Equal(-1, results[0].HandleMethodTypeParameterCount);
+    }
+
+    [Fact]
+    public void Discover_SubclassedAttribute_IsDetected()
+    {
+        var source = """
+            using ZeroAlloc.Pipeline;
+
+            public sealed class MediatorPipelineBehaviorAttribute : PipelineBehaviorAttribute
+            {
+                public MediatorPipelineBehaviorAttribute(int order = 0) : base(order) { }
+            }
+
+            public interface IMediatorBehavior : IPipelineBehavior { }
+
+            [MediatorPipelineBehavior(Order = 2)]
+            public class MyBehavior : IMediatorBehavior
+            {
+                public static string Handle<T>(T r, System.Func<T, string> next) => next(r);
+            }
+            """;
+
+        var compilation = CreateCompilation(source);
+        var results = PipelineBehaviorDiscoverer.Discover(compilation).ToList();
+
+        Assert.Single(results);
+        Assert.Equal(2, results[0].Order);
+    }
+}
