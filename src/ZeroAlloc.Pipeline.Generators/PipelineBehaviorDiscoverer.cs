@@ -91,6 +91,14 @@ public static class PipelineBehaviorDiscoverer
     /// <summary>
     /// When the attribute class is an error type, try to find its real symbol by looking up
     /// the class declaration in the same compilation.
+    /// <para>
+    /// <b>IMPORTANT:</b> This fallback is only reached when
+    /// <c>AttributeClass.TypeKind == TypeKind.Error</c>, which happens in incomplete test
+    /// compilations that are missing runtime/framework references. In a real source generator
+    /// execution (where all referenced assemblies are present) this path is never taken.
+    /// Do NOT remove this method — the generator tests rely on it to exercise attribute
+    /// subclass discovery without a full BCL reference set.
+    /// </para>
     /// </summary>
     private static INamedTypeSymbol? ResolveAttributeClassFromSyntax(AttributeData attr, SemanticModel semanticModel)
     {
@@ -127,11 +135,13 @@ public static class PipelineBehaviorDiscoverer
 
     private static bool InheritsFrom(INamedTypeSymbol symbol, string fullName)
     {
+        // Check all interfaces transitively (AllInterfaces is already transitive)
+        if (symbol.AllInterfaces.Any(i => i.ToDisplayString() == fullName)) return true;
+        // Walk the base class chain for direct name match
         var current = symbol;
         while (current != null)
         {
             if (current.ToDisplayString() == fullName) return true;
-            if (current.AllInterfaces.Any(i => i.ToDisplayString() == fullName)) return true;
             current = current.BaseType;
         }
         return false;
@@ -192,7 +202,7 @@ public static class PipelineBehaviorDiscoverer
         // Try semantic named arguments first.
         foreach (var named in attr.NamedArguments)
         {
-            if (named.Key == "AppliesTo" && named.Value.Value is INamedTypeSymbol typeSymbol)
+            if (named.Key == "AppliesTo" && named.Value.Value is ITypeSymbol typeSymbol)
                 return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
 
