@@ -11,6 +11,8 @@
     <RepositoryUrl>https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>Copyright (c) Marcel Roozekrans</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
   <ItemGroup Condition="'$(IsPackable)' != 'false'">
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
