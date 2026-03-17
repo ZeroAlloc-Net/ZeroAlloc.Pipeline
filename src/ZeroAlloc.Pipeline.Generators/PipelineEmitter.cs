@@ -18,6 +18,15 @@ public static class PipelineEmitter
         IReadOnlyList<PipelineBehaviorInfo> behaviors,
         PipelineShape shape)
     {
+        if (behaviors == null) throw new System.ArgumentNullException(nameof(behaviors));
+        if (shape == null) throw new System.ArgumentNullException(nameof(shape));
+        if (shape.TypeArguments == null || shape.TypeArguments.Length == 0)
+            throw new System.ArgumentException("TypeArguments must contain at least one type argument.", nameof(shape));
+        if (shape.LambdaParameterPrefixes == null || shape.LambdaParameterPrefixes.Length == 0)
+            throw new System.ArgumentException("LambdaParameterPrefixes must contain at least one prefix.", nameof(shape));
+        if (shape.OuterParameterNames == null || shape.OuterParameterNames.Length == 0)
+            throw new System.ArgumentException("OuterParameterNames must contain at least one parameter name.", nameof(shape));
+
         if (behaviors.Count == 0)
             return shape.InnermostBodyTemplate;
 

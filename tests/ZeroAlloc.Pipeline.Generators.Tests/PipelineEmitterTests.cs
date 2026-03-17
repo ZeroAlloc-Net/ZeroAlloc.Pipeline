@@ -23,6 +23,27 @@ public class PipelineEmitterTests
         };
 
     [Fact]
+    public void EmitChain_NullBehaviors_Throws()
+    {
+        var shape = MediatorShape("global::App.Ping", "string", "body");
+        Assert.Throws<System.ArgumentNullException>(() => PipelineEmitter.EmitChain(null!, shape));
+    }
+
+    [Fact]
+    public void EmitChain_EmptyTypeArguments_Throws()
+    {
+        var shape = new PipelineShape
+        {
+            TypeArguments = [],
+            OuterParameterNames = ["request"],
+            LambdaParameterPrefixes = ["r"],
+            InnermostBodyTemplate = "body",
+        };
+        Assert.Throws<System.ArgumentException>(() =>
+            PipelineEmitter.EmitChain([new PipelineBehaviorInfo("global::App.B", 0, null, 1)], shape));
+    }
+
+    [Fact]
     public void EmitChain_NoBehaviors_ReturnsInnermostBody()
     {
         var shape = MediatorShape("global::App.Ping", "string", "handler.Handle(request, ct)");
