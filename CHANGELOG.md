@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.2...v0.1.3) (2026-03-19)
+
+
+### Bug Fixes
+
+* update PackageProjectUrl to docs site ([760c6b0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/760c6b05901c36bae482ebc615921afe21724897))
+* update PackageProjectUrl to docs site ([51bcaab](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/51bcaab375f033d715ad67074957bba49a1731a7))
+
 ## [0.1.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.1...v0.1.2) (2026-03-17)
 
 
