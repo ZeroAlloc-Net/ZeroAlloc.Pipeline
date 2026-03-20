@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.3...v0.1.4) (2026-03-19)
+
+
+### Bug Fixes
+
+* update PackageProjectUrl and trigger CI on release-please branches ([896cd69](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/896cd693c08aec3ae4a448ad6218e5ea3b578bf1))
+
 ## [0.1.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.2...v0.1.3) (2026-03-19)
 
 
