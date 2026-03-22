@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.4...v0.1.5) (2026-03-22)
+
+
+### Bug Fixes
+
+* correct dotnet-version format (10.0.x not net10.0) ([b70495a](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/b70495aa9fbae3728d8be5e7ff4cd734c109fa50))
+
 ## [0.1.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.3...v0.1.4) (2026-03-19)
 
 
