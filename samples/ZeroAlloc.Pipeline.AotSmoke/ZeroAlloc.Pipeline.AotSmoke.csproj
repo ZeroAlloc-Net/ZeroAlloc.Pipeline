@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ZeroAlloc.Pipeline.AotSmoke</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Size</OptimizationPreference>
+
+    <WarningsAsErrors>$(WarningsAsErrors);IL2026;IL2067;IL2075;IL2091;IL3050;IL3051</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pipeline contracts (IPipelineBehavior + PipelineBehaviorAttribute) must publish
+         cleanly under AOT since every consumer lib that adopts pipeline behaviors depends
+         on them. The Generators project emits code in consuming assemblies (not here), so
+         it's referenced as an Analyzer to verify the package wiring is AOT-safe, even if
+         no behavior is emitted in this minimal sample. -->
+    <ProjectReference Include="..\..\src\ZeroAlloc.Pipeline\ZeroAlloc.Pipeline.csproj"
+                      UndefineProperties="PublishAot" />
+    <ProjectReference Include="..\..\src\ZeroAlloc.Pipeline.Generators\ZeroAlloc.Pipeline.Generators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      UndefineProperties="PublishAot" />
+  </ItemGroup>
+</Project>
