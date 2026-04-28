@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+Stability milestone — public API of `ZeroAlloc.Pipeline` is now considered stable. No code changes from 0.1.5; this release marks the transition out of pre-1.0 SemVer.
+
 ## [0.1.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.4...v0.1.5) (2026-03-22)
 
 
