@@ -1,1 +1,8 @@
 #nullable enable
+ZeroAlloc.Pipeline.IPipelineBehavior
+ZeroAlloc.Pipeline.PipelineBehaviorAttribute
+ZeroAlloc.Pipeline.PipelineBehaviorAttribute.AppliesTo.get -> System.Type?
+ZeroAlloc.Pipeline.PipelineBehaviorAttribute.AppliesTo.set -> void
+ZeroAlloc.Pipeline.PipelineBehaviorAttribute.Order.get -> int
+ZeroAlloc.Pipeline.PipelineBehaviorAttribute.Order.set -> void
+ZeroAlloc.Pipeline.PipelineBehaviorAttribute.PipelineBehaviorAttribute(int order = 0) -> void
