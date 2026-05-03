@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.0.0...v1.1.0) (2026-05-01)
+
+
+### Features
+
+* lock public API surface (PublicApiAnalyzers + api-compat gate) ([#20](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/20)) ([f555fcd](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/f555fcd97f5fc37c5bf13a1236e327acde37a8c5))
+
 ## [1.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v0.1.5...v1.0.0) (2026-04-28)
 
 
