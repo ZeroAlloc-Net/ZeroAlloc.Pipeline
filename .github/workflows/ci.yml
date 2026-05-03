@@ -46,10 +46,6 @@ jobs:
           dotnet pack src/ZeroAlloc.Pipeline/ZeroAlloc.Pipeline.csproj --no-build -c Release -p:PackageVersion=${{ steps.gitversion.outputs.version }} -o ./artifacts
           dotnet pack src/ZeroAlloc.Pipeline.Generators/ZeroAlloc.Pipeline.Generators.csproj --no-build -c Release -p:PackageVersion=${{ steps.gitversion.outputs.version }} -o ./artifacts
 
-      - name: Push to NuGet (pre-release)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-
   aot-smoke:
     runs-on: ubuntu-latest
     # Publishes samples/ZeroAlloc.Pipeline.AotSmoke. The contract lib is consumed by
