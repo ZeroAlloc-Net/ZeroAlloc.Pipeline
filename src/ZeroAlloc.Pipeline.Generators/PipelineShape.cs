@@ -48,4 +48,17 @@ public sealed record PipelineShape
     /// When set, takes precedence over <see cref="InnermostBodyTemplate"/>.
     /// </summary>
     public System.Func<int, string>? InnermostBodyFactory { get; init; }
+
+    /// <summary>
+    /// Whether <see cref="PipelineEmitter"/> emits each lambda with the <c>static</c> keyword.
+    /// Defaults to <c>true</c> — appropriate when the chain is rooted in a static method that
+    /// has no <c>this</c> to capture.
+    /// <para>
+    /// Set to <c>false</c> when the chain is emitted inside an instance method and the
+    /// innermost body needs to read instance fields (e.g. an injected
+    /// <c>IServiceProvider</c>). Without this, the body would have to thread state via
+    /// <c>AsyncLocal</c> or similar workarounds.
+    /// </para>
+    /// </summary>
+    public bool EmitStaticLambdas { get; init; } = true;
 }
