@@ -41,10 +41,11 @@ public static class PipelineEmitter
             return innermostBody;
 
         var typeArgs = "<" + string.Join(", ", shape.TypeArguments) + ">";
+        var staticPrefix = shape.EmitStaticLambdas ? "static " : "";
 
-        // Build innermost lambda: static (r{depth}, c{depth}) => { ... }
+        // Build innermost lambda: [static] (r{depth}, c{depth}) => { ... }
         var lambdaParams = BuildLambdaParams(shape.LambdaParameterPrefixes, depth);
-        var innermost = $"static {lambdaParams} =>{Indent2}{innermostBody}";
+        var innermost = $"{staticPrefix}{lambdaParams} =>{Indent2}{innermostBody}";
 
         var result = innermost;
 
@@ -62,7 +63,7 @@ public static class PipelineEmitter
                 // Intermediate: wrap in a lambda using level-i param names
                 var levelParams = BuildLambdaParams(shape.LambdaParameterPrefixes, i);
                 var levelParamRefs = BuildParamRefs(shape.LambdaParameterPrefixes, i);
-                result = $"static {levelParams} =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParamRefs}, {result})";
+                result = $"{staticPrefix}{levelParams} =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParamRefs}, {result})";
             }
         }
 
