@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.1.0...v1.2.0) (2026-05-03)
+
+
+### Features
+
+* **generators:** emitstaticlambdas flag on pipelineshape ([#22](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/22)) ([18d9a04](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/18d9a04a68908c705d357d895af3c04851a70e59))
+
 ## [1.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.0.0...v1.1.0) (2026-05-01)
 
 
