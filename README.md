@@ -8,7 +8,7 @@
 
 ZeroAlloc.Pipeline is the shared building block for pipeline-aware source generators in the ZeroAlloc ecosystem. It provides the `IPipelineBehavior` marker interface, `PipelineBehaviorAttribute`, and the Roslyn-based discovery, validation, and code-emission utilities that generators like ZeroAlloc.Mediator and ZeroAlloc.Validation build on. All pipeline wiring is resolved at compile time — no reflection, no virtual dispatch, no heap allocation per call.
 
-Multiple packages in this family — see [Documentation](docs/) or NuGet for the full list.
+Multiple packages in this family — see [Documentation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/tree/main/docs/) or NuGet for the full list.
 
 ## Install
 
@@ -60,7 +60,7 @@ ZeroAlloc.Pipeline emits static nested lambda chains. Static lambdas carry no cl
 | Pre-built delegate chain | 2.2 ns | 9.9 ns | 17.6 ns | 0 B |
 | Speedup | 0.5× | **4.3×** | **6.4×** | — |
 
-BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests/ZeroAlloc.Pipeline.Benchmarks`](tests/ZeroAlloc.Pipeline.Benchmarks)
+BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests/ZeroAlloc.Pipeline.Benchmarks`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/tests/ZeroAlloc.Pipeline.Benchmarks)
 
 ## Features
 
@@ -78,14 +78,14 @@ BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests
 
 | Page | Description |
 |------|-------------|
-| [Getting Started](docs/getting-started.md) | Write your first behavior and see it get picked up |
-| [Pipeline Behaviors](docs/pipeline-behaviors.md) | `IPipelineBehavior`, `PipelineBehaviorAttribute`, ordering, scoping |
-| [Pipeline Shape](docs/pipeline-shape.md) | Describe the delegate shape for code generation |
-| [Pipeline Emitter](docs/pipeline-emitter.md) | Generate a nested static lambda call chain |
-| [Pipeline Discoverer](docs/pipeline-discoverer.md) | Discover behaviors at compile time |
-| [Diagnostics](docs/diagnostics.md) | ZAP001, ZAP002 diagnostic rules reference |
-| [Performance](docs/performance.md) | Why static lambda chains allocate nothing |
-| [Testing](docs/testing.md) | Test behaviors and generators built on this library |
+| [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/getting-started.md) | Write your first behavior and see it get picked up |
+| [Pipeline Behaviors](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-behaviors.md) | `IPipelineBehavior`, `PipelineBehaviorAttribute`, ordering, scoping |
+| [Pipeline Shape](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-shape.md) | Describe the delegate shape for code generation |
+| [Pipeline Emitter](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-emitter.md) | Generate a nested static lambda call chain |
+| [Pipeline Discoverer](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-discoverer.md) | Discover behaviors at compile time |
+| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/diagnostics.md) | ZAP001, ZAP002 diagnostic rules reference |
+| [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/performance.md) | Why static lambda chains allocate nothing |
+| [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/testing.md) | Test behaviors and generators built on this library |
 
 ## License
 
