@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.0...v1.2.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **readme:** absolute GitHub URLs so nuget.org links resolve ([#29](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/29)) ([89be3fa](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/89be3fa71bfd8c43250beddbe5491e9ecf198d27))
+
 ## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.1.0...v1.2.0) (2026-05-03)
 
 
