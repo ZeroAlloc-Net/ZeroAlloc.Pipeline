@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.1...v1.2.2) (2026-09-19)
+
+
+### Bug Fixes
+
+* **ci:** stamp the assembly version when publishing from a manifest ([#88](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/88)) ([262fa57](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/262fa5722067021af67a63466763028575ae623c))
+
 ## [1.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.0...v1.2.1) (2026-05-12)
 
 
