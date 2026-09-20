@@ -5,3 +5,6 @@ obj/
 *.nupkg
 *.snupkg
 artifacts/
+
+# BenchmarkDotNet writes its reports here when the benchmarks are run locally.
+BenchmarkDotNet.Artifacts/
