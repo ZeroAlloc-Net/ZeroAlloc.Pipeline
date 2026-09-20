@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.2...v1.2.3) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** pin the SDK floor at the .NET 10 GA band, not the newest patch ([#92](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/92)) ([0c5cf13](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/0c5cf1357aa900ae366fd518de0227c327b5ac4d))
+
 ## [1.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.1...v1.2.2) (2026-09-19)
 
 
