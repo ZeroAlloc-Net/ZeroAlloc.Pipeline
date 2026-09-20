@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.3...v1.2.4) (2026-09-20)
+
+
+### Bug Fixes
+
+* pack every src package instead of a hardcoded list ([#95](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/95)) ([d56352f](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/d56352f1322fb1160273ae10119a81787b4ae3e2))
+
 ## [1.2.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.2...v1.2.3) (2026-09-20)
 
 
