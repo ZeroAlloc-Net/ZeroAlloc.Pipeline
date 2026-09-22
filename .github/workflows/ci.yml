@@ -84,6 +84,3 @@ jobs:
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
-    with:
-      package-id: ZeroAlloc.Pipeline
-      csproj-path: src/ZeroAlloc.Pipeline/ZeroAlloc.Pipeline.csproj
