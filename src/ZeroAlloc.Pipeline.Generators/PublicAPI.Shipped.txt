@@ -1,0 +1,42 @@
+#nullable enable
+override ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.Equals(object? obj) -> bool
+override ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.GetHashCode() -> int
+override ZeroAlloc.Pipeline.Generators.PipelineShape.Equals(object? obj) -> bool
+override ZeroAlloc.Pipeline.Generators.PipelineShape.GetHashCode() -> int
+override ZeroAlloc.Pipeline.Generators.PipelineShape.ToString() -> string!
+static ZeroAlloc.Pipeline.Generators.PipelineBehaviorDiscoverer.Discover(Microsoft.CodeAnalysis.Compilation! compilation) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>!
+static ZeroAlloc.Pipeline.Generators.PipelineBehaviorDiscoverer.FromAttributeSyntaxContext(Microsoft.CodeAnalysis.GeneratorAttributeSyntaxContext ctx) -> ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo?
+static ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.operator !=(ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo? left, ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo? right) -> bool
+static ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.operator ==(ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo? left, ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo? right) -> bool
+static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindDuplicateOrders(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors) -> System.Collections.Generic.IEnumerable<System.Linq.IGrouping<int, ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>!>!
+static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindMissingHandleMethod(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, int expectedTypeParamCount) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>!
+static ZeroAlloc.Pipeline.Generators.PipelineEmitter.EmitChain(System.Collections.Generic.IReadOnlyList<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, ZeroAlloc.Pipeline.Generators.PipelineShape! shape) -> string!
+static ZeroAlloc.Pipeline.Generators.PipelineShape.operator !=(ZeroAlloc.Pipeline.Generators.PipelineShape? left, ZeroAlloc.Pipeline.Generators.PipelineShape? right) -> bool
+static ZeroAlloc.Pipeline.Generators.PipelineShape.operator ==(ZeroAlloc.Pipeline.Generators.PipelineShape? left, ZeroAlloc.Pipeline.Generators.PipelineShape? right) -> bool
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorDiscoverer
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.AppliesTo.get -> string?
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.BehaviorTypeName.get -> string!
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.Equals(ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo? other) -> bool
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.HandleMethodTypeParameterCount.get -> int
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.HasValidHandleMethod(int expectedTypeParamCount) -> bool
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.Order.get -> int
+ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.PipelineBehaviorInfo(string! behaviorTypeName, int order, string? appliesTo, int typeParamCount) -> void
+ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules
+ZeroAlloc.Pipeline.Generators.PipelineEmitter
+ZeroAlloc.Pipeline.Generators.PipelineShape
+ZeroAlloc.Pipeline.Generators.PipelineShape.<Clone>$() -> ZeroAlloc.Pipeline.Generators.PipelineShape!
+ZeroAlloc.Pipeline.Generators.PipelineShape.EmitStaticLambdas.get -> bool
+ZeroAlloc.Pipeline.Generators.PipelineShape.EmitStaticLambdas.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineShape.Equals(ZeroAlloc.Pipeline.Generators.PipelineShape? other) -> bool
+ZeroAlloc.Pipeline.Generators.PipelineShape.InnermostBodyFactory.get -> System.Func<int, string!>?
+ZeroAlloc.Pipeline.Generators.PipelineShape.InnermostBodyFactory.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineShape.InnermostBodyTemplate.get -> string!
+ZeroAlloc.Pipeline.Generators.PipelineShape.InnermostBodyTemplate.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineShape.LambdaParameterPrefixes.get -> string![]!
+ZeroAlloc.Pipeline.Generators.PipelineShape.LambdaParameterPrefixes.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineShape.OuterParameterNames.get -> string![]!
+ZeroAlloc.Pipeline.Generators.PipelineShape.OuterParameterNames.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineShape.PipelineShape() -> void
+ZeroAlloc.Pipeline.Generators.PipelineShape.TypeArguments.get -> string![]!
+ZeroAlloc.Pipeline.Generators.PipelineShape.TypeArguments.init -> void
