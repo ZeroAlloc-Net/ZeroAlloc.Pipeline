@@ -52,6 +52,30 @@ public sealed class PipelineBehaviorInfo
 
 `HasValidHandleMethod(int expected)` returns `true` when `HandleMethodTypeParameterCount == expected`.
 
+## Types That Do Not Implement `IPipelineBehavior`
+
+A type with `[PipelineBehavior]` that does not implement `IPipelineBehavior` is not a behavior: `FromAttributeSyntaxContext` returns `null` for it and `Discover` skips it, so it never joins the pipeline. The most common case is a `static class`, which cannot implement an interface at all. Left unreported, such a behavior silently never runs.
+
+Two more entry points return a `PipelineBehaviorCandidateInfo` for every type that carries the attribute, valid or not, so your generator can report the invalid ones:
+
+```csharp
+public static PipelineBehaviorCandidateInfo? CandidateFromAttributeSyntaxContext(GeneratorAttributeSyntaxContext ctx)
+public static IEnumerable<PipelineBehaviorCandidateInfo> DiscoverCandidates(Compilation compilation)
+```
+
+As with the behavior entry points, use `CandidateFromAttributeSyntaxContext` with `ForAttributeWithMetadataName` in generators and `DiscoverCandidates` in tests and one-shot tools.
+
+```csharp
+public sealed class PipelineBehaviorCandidateInfo
+{
+    public string BehaviorTypeName           { get; } // e.g. "global::App.LoggingBehavior"
+    public bool   ImplementsPipelineBehavior { get; } // false: never joins the pipeline
+    public bool   IsStatic                   { get; } // true: a static class, which cannot implement it
+}
+```
+
+Pass the candidates to `PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface` and report each result as a warning. See [ZAP003](diagnostics.md#zap003--pipeline-behavior-does-not-implement-ipipelinebehavior).
+
 ## Attribute Subclass Detection
 
 The discoverer performs a two-pass attribute resolution:
@@ -78,6 +102,7 @@ var applicable = behaviors
 - Use `Discover` only in tests or one-shot tools
 - Always filter by `AppliesTo` before emitting
 - Check `HandleMethodTypeParameterCount` with `FindMissingHandleMethod` before emitting — invalid behaviors should produce a diagnostic, not a compile error in the generated code
+- Report `[PipelineBehavior]` types without the interface with `FindMissingPipelineBehaviorInterface` — otherwise they are dropped silently
 
 ## Common Pitfalls
 
