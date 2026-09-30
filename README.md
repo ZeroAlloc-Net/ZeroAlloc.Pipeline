@@ -68,7 +68,7 @@ BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests
 - **`PipelineBehaviorAttribute`** — `Order` (execution position) and `AppliesTo` (type scoping)
 - **Attribute subclassing** — framework packages define their own alias; discovery follows the inheritance chain
 - **Compile-time discovery** — `PipelineBehaviorDiscoverer` and `FromAttributeSyntaxContext` for incremental generators
-- **Static emitter** — `PipelineEmitter.EmitChain` generates a nested static lambda chain from a behavior list and a `PipelineShape`
+- **Static emitter** — `PipelineEmitter.EmitChain` generates a nested static lambda chain from a behavior list and a `PipelineShape`; `EmitCachedChain` caches the delegates in instance fields when the body reads instance state
 - **`PipelineShape`** — describes type arguments, parameter names, and the innermost body; supports a factory delegate when the body embeds depth-indexed lambda names
 - **Diagnostic helpers** — `PipelineDiagnosticRules.FindMissingHandleMethod`, `FindDuplicateOrders` and `FindMissingPipelineBehaviorInterface` return offending behaviors; the caller maps them to framework-specific diagnostic IDs
 - **Zero allocation** — no reflection, no boxing, no delegate list per call

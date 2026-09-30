@@ -20,6 +20,17 @@ public static class PipelineEmitter
     public static string EmitChain(
         IReadOnlyList<PipelineBehaviorInfo> behaviors,
         PipelineShape shape)
+        => EmitChain(behaviors, shape, static _ => "");
+
+    /// <param name="behaviors">See <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/>.</param>
+    /// <param name="shape">See <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/>.</param>
+    /// <param name="nextPrefix">
+    /// Written before the <c>next</c> lambda passed at each level, given the lambda's level.
+    /// </param>
+    private static string EmitChain(
+        IReadOnlyList<PipelineBehaviorInfo> behaviors,
+        PipelineShape shape,
+        System.Func<int, string> nextPrefix)
     {
         if (behaviors == null) throw new System.ArgumentNullException(nameof(behaviors));
         if (shape == null) throw new System.ArgumentNullException(nameof(shape));
@@ -45,7 +56,7 @@ public static class PipelineEmitter
 
         // Build innermost lambda: [static] (r{depth}, c{depth}) => { ... }
         var lambdaParams = BuildLambdaParams(shape.LambdaParameterPrefixes, depth);
-        var innermost = $"{staticPrefix}{lambdaParams} =>{Indent2}{innermostBody}";
+        var innermost = $"{nextPrefix(depth)}{staticPrefix}{lambdaParams} =>{Indent2}{innermostBody}";
 
         var result = innermost;
 
@@ -63,11 +74,62 @@ public static class PipelineEmitter
                 // Intermediate: wrap in a lambda using level-i param names
                 var levelParams = BuildLambdaParams(shape.LambdaParameterPrefixes, i);
                 var levelParamRefs = BuildParamRefs(shape.LambdaParameterPrefixes, i);
-                result = $"{staticPrefix}{levelParams} =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParamRefs}, {result})";
+                result = $"{nextPrefix(i)}{staticPrefix}{levelParams} =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParamRefs}, {result})";
             }
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Emits the same call chain as <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/>, but caches each level's <c>next</c>
+    /// delegate in an instance field, so the chain allocates no delegate after its first call.
+    /// Use it when the innermost body reads instance state: <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/> then needs
+    /// <see cref="PipelineShape.EmitStaticLambdas"/> set to <c>false</c>, and every call allocates
+    /// one delegate per behavior, because the compiler does not cache a lambda that captures
+    /// <c>this</c>.
+    /// <para>
+    /// Each level reads <c>field ??= lambda</c>. The lambdas read the next level's field, so they
+    /// are never <c>static</c> and <see cref="PipelineShape.EmitStaticLambdas"/> is ignored. Emit
+    /// the chain in an instance member of the type that declares
+    /// <see cref="PipelineCachedChain.MemberDeclarations"/>. Two threads that make the first call
+    /// together may each create a delegate; both are equivalent and one is kept.
+    /// </para>
+    /// </summary>
+    /// <param name="behaviors">
+    /// Behaviors to chain, pre-filtered (AppliesTo already checked) and sorted by Order ascending.
+    /// </param>
+    /// <param name="shape">Delegate shape describing type args, parameter names, and the innermost body.</param>
+    /// <param name="nextDelegateType">
+    /// The fully qualified type of the <c>next</c> parameter of the behaviors' <c>Handle</c>, with
+    /// the shape's type arguments substituted, e.g.
+    /// <c>global::System.Func&lt;global::App.Ping, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask&lt;string&gt;&gt;</c>.
+    /// It is the type of every cache field.
+    /// </param>
+    /// <param name="cacheFieldPrefix">
+    /// The name of the cache fields before their level number, e.g. <c>__sendPingNext</c> gives
+    /// <c>__sendPingNext1</c>, <c>__sendPingNext2</c>. It must be unique among the chains of the
+    /// containing type.
+    /// </param>
+    public static PipelineCachedChain EmitCachedChain(
+        IReadOnlyList<PipelineBehaviorInfo> behaviors,
+        PipelineShape shape,
+        string nextDelegateType,
+        string cacheFieldPrefix)
+    {
+        if (string.IsNullOrWhiteSpace(nextDelegateType))
+            throw new System.ArgumentException("nextDelegateType must name the type of the behaviors' next delegate.", nameof(nextDelegateType));
+        if (string.IsNullOrWhiteSpace(cacheFieldPrefix))
+            throw new System.ArgumentException("cacheFieldPrefix must be a valid identifier prefix.", nameof(cacheFieldPrefix));
+
+        var nonStaticShape = shape?.EmitStaticLambdas == true ? shape with { EmitStaticLambdas = false } : shape;
+        var expression = EmitChain(behaviors, nonStaticShape!, level => $"{cacheFieldPrefix}{level} ??= ");
+
+        var members = new string[behaviors.Count];
+        for (var level = 1; level <= behaviors.Count; level++)
+            members[level - 1] = $"private {nextDelegateType}? {cacheFieldPrefix}{level};";
+
+        return new PipelineCachedChain(expression, members);
     }
 
     private static string BuildLambdaParams(string[] prefixes, int level)

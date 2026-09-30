@@ -20,6 +20,7 @@ public sealed record PipelineShape
     public required string[] LambdaParameterPrefixes { get; init; }
     public string            InnermostBodyTemplate   { get; init; } = string.Empty;
     public Func<int, string>? InnermostBodyFactory   { get; init; }
+    public bool              EmitStaticLambdas       { get; init; } = true;
 }
 ```
 
@@ -110,6 +111,10 @@ var shape = new PipelineShape
         $"{{ return new OrderValidator().Validate(r{depth}); }}",
 };
 ```
+
+### `EmitStaticLambdas`
+
+Whether `EmitChain` writes each lambda as `static`. Leave it `true`, the default, when the innermost body reads no instance state: static lambdas are created once, so the chain allocates nothing. Set it to `false` when the body reads instance fields, such as an injected `IServiceProvider`. A lambda that captures `this` is then allocated on every call; use [`EmitCachedChain`](pipeline-emitter.md#instance-state-emitcachedchain) to cache those delegates. `EmitCachedChain` ignores this property.
 
 ## Rules & Best Practices
 
