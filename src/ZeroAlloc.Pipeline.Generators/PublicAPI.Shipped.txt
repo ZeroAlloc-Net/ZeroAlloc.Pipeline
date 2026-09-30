@@ -17,6 +17,7 @@ static ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.operator ==(ZeroAlloc.
 static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindDuplicateOrders(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors) -> System.Collections.Generic.IEnumerable<System.Linq.IGrouping<int, ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>!>!
 static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindMissingHandleMethod(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, int expectedTypeParamCount) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>!
 static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo!>! candidates) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo!>!
+static ZeroAlloc.Pipeline.Generators.PipelineEmitter.EmitCachedChain(System.Collections.Generic.IReadOnlyList<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, ZeroAlloc.Pipeline.Generators.PipelineShape! shape, string! nextDelegateType, string! cacheFieldPrefix) -> ZeroAlloc.Pipeline.Generators.PipelineCachedChain!
 static ZeroAlloc.Pipeline.Generators.PipelineEmitter.EmitChain(System.Collections.Generic.IReadOnlyList<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, ZeroAlloc.Pipeline.Generators.PipelineShape! shape) -> string!
 static ZeroAlloc.Pipeline.Generators.PipelineShape.operator !=(ZeroAlloc.Pipeline.Generators.PipelineShape? left, ZeroAlloc.Pipeline.Generators.PipelineShape? right) -> bool
 static ZeroAlloc.Pipeline.Generators.PipelineShape.operator ==(ZeroAlloc.Pipeline.Generators.PipelineShape? left, ZeroAlloc.Pipeline.Generators.PipelineShape? right) -> bool
@@ -35,6 +36,10 @@ ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.HandleMethodTypeParameterCoun
 ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.HasValidHandleMethod(int expectedTypeParamCount) -> bool
 ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.Order.get -> int
 ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo.PipelineBehaviorInfo(string! behaviorTypeName, int order, string? appliesTo, int typeParamCount) -> void
+ZeroAlloc.Pipeline.Generators.PipelineCachedChain
+ZeroAlloc.Pipeline.Generators.PipelineCachedChain.Expression.get -> string!
+ZeroAlloc.Pipeline.Generators.PipelineCachedChain.MemberDeclarations.get -> System.Collections.Generic.IReadOnlyList<string!>!
+ZeroAlloc.Pipeline.Generators.PipelineCachedChain.PipelineCachedChain(string! expression, System.Collections.Generic.IReadOnlyList<string!>! memberDeclarations) -> void
 ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules
 ZeroAlloc.Pipeline.Generators.PipelineEmitter
 ZeroAlloc.Pipeline.Generators.PipelineShape
