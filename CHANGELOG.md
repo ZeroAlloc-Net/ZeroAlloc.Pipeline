@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.5...v1.3.0) (2026-09-30)
+
+
+### Features
+
+* surface [PipelineBehavior] types that do not implement IPipelineBehavior ([42cb835](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/42cb835bf6349e11297fb9ae5c0979ce697be078))
+
+
+### Bug Fixes
+
+* Discover returns a partial behavior once, not once per attributed part ([42cb835](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/42cb835bf6349e11297fb9ae5c0979ce697be078))
+
 ## [1.2.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.4...v1.2.5) (2026-09-28)
 
 
