@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.3.0...v1.4.0) (2026-09-30)
+
+
+### Features
+
+* add EmitCachedChain to cache non-static pipeline delegates in fields ([#118](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/118)) ([761ac70](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/761ac70c6bb63d52ddd9199edc2af4a93bf24cb8)), closes [#117](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/117)
+
 ## [1.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.2.5...v1.3.0) (2026-09-30)
 
 
