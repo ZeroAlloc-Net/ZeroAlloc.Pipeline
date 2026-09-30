@@ -1,14 +1,1 @@
 #nullable enable
-override ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.Equals(object? obj) -> bool
-override ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.GetHashCode() -> int
-static ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.operator !=(ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo? left, ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo? right) -> bool
-static ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.operator ==(ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo? left, ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo? right) -> bool
-static ZeroAlloc.Pipeline.Generators.PipelineBehaviorDiscoverer.CandidateFromAttributeSyntaxContext(Microsoft.CodeAnalysis.GeneratorAttributeSyntaxContext ctx) -> ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo?
-static ZeroAlloc.Pipeline.Generators.PipelineBehaviorDiscoverer.DiscoverCandidates(Microsoft.CodeAnalysis.Compilation! compilation) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo!>!
-static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo!>! candidates) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo!>!
-ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo
-ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.BehaviorTypeName.get -> string!
-ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.Equals(ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo? other) -> bool
-ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.ImplementsPipelineBehavior.get -> bool
-ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.IsStatic.get -> bool
-ZeroAlloc.Pipeline.Generators.PipelineBehaviorCandidateInfo.PipelineBehaviorCandidateInfo(string! behaviorTypeName, bool implementsPipelineBehavior, bool isStatic) -> void
