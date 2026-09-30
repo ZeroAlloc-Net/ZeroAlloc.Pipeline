@@ -1,6 +1,1 @@
 #nullable enable
-static ZeroAlloc.Pipeline.Generators.PipelineEmitter.EmitCachedChain(System.Collections.Generic.IReadOnlyList<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, ZeroAlloc.Pipeline.Generators.PipelineShape! shape, string! nextDelegateType, string! cacheFieldPrefix) -> ZeroAlloc.Pipeline.Generators.PipelineCachedChain!
-ZeroAlloc.Pipeline.Generators.PipelineCachedChain
-ZeroAlloc.Pipeline.Generators.PipelineCachedChain.Expression.get -> string!
-ZeroAlloc.Pipeline.Generators.PipelineCachedChain.MemberDeclarations.get -> System.Collections.Generic.IReadOnlyList<string!>!
-ZeroAlloc.Pipeline.Generators.PipelineCachedChain.PipelineCachedChain(string! expression, System.Collections.Generic.IReadOnlyList<string!>! memberDeclarations) -> void
