@@ -12,8 +12,8 @@ Report `ZAPxxx`-style diagnostics from your own generator using `PipelineDiagnos
 
 ## What We're Building
 
-- Two `DiagnosticDescriptor` objects (one Error, one Warning)
-- Integration with `PipelineDiagnosticRules.FindMissingHandleMethod` and `FindDuplicateOrders`
+- Three `DiagnosticDescriptor` objects (one Error, two Warnings)
+- Integration with `PipelineDiagnosticRules.FindMissingHandleMethod`, `FindDuplicateOrders` and `FindMissingPipelineBehaviorInterface`
 - Correct locations so the squiggle appears under the offending class attribute
 
 ## DiagnosticDescriptor Setup
@@ -42,6 +42,15 @@ internal static class Diagnostics
         category:           Category,
         defaultSeverity:    DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
+
+    // ZAP003-equivalent for your generator. A Warning, so code that compiled before still does.
+    public static readonly DiagnosticDescriptor MissingInterface = new(
+        id:                 "ZAP003",
+        title:              "Pipeline behavior does not implement IPipelineBehavior",
+        messageFormat:      "'{0}' has [PipelineBehavior] but does not implement IPipelineBehavior, so it never runs; {1}",
+        category:           Category,
+        defaultSeverity:    DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
 }
 ```
 
@@ -56,7 +65,7 @@ foreach (var b in invalid)
 {
     spc.ReportDiagnostic(Diagnostic.Create(
         Diagnostics.MissingHandle,
-        GetLocation(b, compilation),  // see helper below
+        GetLocation(b.BehaviorTypeName, compilation),  // see helper below
         b.BehaviorTypeName,
         2));
 }
@@ -66,15 +75,25 @@ foreach (var group in PipelineDiagnosticRules.FindDuplicateOrders(behaviors))
     foreach (var b in group)
         spc.ReportDiagnostic(Diagnostic.Create(
             Diagnostics.DuplicateOrder,
-            GetLocation(b, compilation),
+            GetLocation(b.BehaviorTypeName, compilation),
             b.Order,
             b.BehaviorTypeName));
+
+// ZAP003 — [PipelineBehavior] without the interface. The candidates come from
+// PipelineBehaviorDiscoverer.CandidateFromAttributeSyntaxContext, which also returns the types
+// that FromAttributeSyntaxContext drops.
+foreach (var c in PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface(candidates))
+    spc.ReportDiagnostic(Diagnostic.Create(
+        Diagnostics.MissingInterface,
+        GetLocation(c.BehaviorTypeName, compilation),
+        c.BehaviorTypeName,
+        c.IsStatic ? "make the class non-static and implement IPipelineBehavior" : "implement IPipelineBehavior"));
 ```
 
 ## Getting the Source Location
 
 ```csharp
-private static Location GetLocation(PipelineBehaviorInfo info, Compilation compilation)
+private static Location GetLocation(string behaviorTypeName, Compilation compilation)
 {
     // Find the class declaration to attach the diagnostic to the attribute, not line 1
     foreach (var tree in compilation.SyntaxTrees)
@@ -84,7 +103,7 @@ private static Location GetLocation(PipelineBehaviorInfo info, Compilation compi
             .DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => model.GetDeclaredSymbol(c)
-                ?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == info.BehaviorTypeName);
+                ?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == behaviorTypeName);
 
         if (classDecl != null)
             return classDecl.GetLocation();
@@ -95,5 +114,5 @@ private static Location GetLocation(PipelineBehaviorInfo info, Compilation compi
 
 ## Related
 
-- [Diagnostics](../diagnostics.md) — ZAP001 and ZAP002 reference
+- [Diagnostics](../diagnostics.md) — ZAP001 to ZAP003 reference
 - [Cookbook: Build a Pipeline Generator](04-build-a-pipeline-generator.md)

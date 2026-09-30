@@ -2,13 +2,13 @@
 id: diagnostics
 title: Diagnostics
 slug: /docs/diagnostics
-description: Reference for ZAP001 and ZAP002 diagnostic rules provided by PipelineDiagnosticRules.
+description: Reference for the ZAP001 to ZAP003 diagnostic rules provided by PipelineDiagnosticRules.
 sidebar_position: 6
 ---
 
 # Diagnostics
 
-`PipelineDiagnosticRules` provides two reusable rule helpers. They return the offending `PipelineBehaviorInfo` entries — your generator maps them to actual Roslyn `Diagnostic` objects using your own diagnostic IDs (e.g. `ZAM005`, `ZV005`).
+`PipelineDiagnosticRules` provides three reusable rule helpers. They return the offending `PipelineBehaviorInfo` or `PipelineBehaviorCandidateInfo` entries — your generator maps them to actual Roslyn `Diagnostic` objects using your own diagnostic IDs (e.g. `ZAM005`, `ZV005`).
 
 ## Diagnostic Reference
 
@@ -16,6 +16,7 @@ sidebar_position: 6
 |------|----------|-------|---------------|
 | ZAP001 | Error | Missing or invalid Handle method | Behavior has no `public static Handle` with the expected number of type parameters |
 | ZAP002 | Warning | Duplicate Order value | Two or more behaviors share the same `Order` |
+| ZAP003 | Warning | Pipeline behavior does not implement `IPipelineBehavior` | A type has `[PipelineBehavior]` but does not implement `IPipelineBehavior`, so it never runs |
 
 ---
 
@@ -111,9 +112,74 @@ foreach (var group in dupeGroups)
 
 ---
 
+## ZAP003 — Pipeline Behavior Does Not Implement IPipelineBehavior
+
+### What it means
+
+A type carries `[PipelineBehavior]` but does not implement `IPipelineBehavior` or a sub-interface of it. Discovery leaves it out of the pipeline, so its `Handle` method is never called. It is a warning rather than an error so that code which compiled before keeps compiling, but the behavior does nothing until it is fixed.
+
+### Examples that trigger ZAP003
+
+```csharp
+// ❌ A static class cannot implement an interface, so it can never be a behavior
+[PipelineBehavior(Order = 0)]
+public static class LoggingBehavior
+{
+    public static ValueTask<TResponse> Handle<TRequest, TResponse>(
+        TRequest request,
+        CancellationToken ct,
+        Func<TRequest, CancellationToken, ValueTask<TResponse>> next)
+        => next(request, ct);
+}
+
+// ❌ The interface is missing
+[PipelineBehavior(Order = 1)]
+public class ValidationBehavior
+{
+    public static ValueTask<TResponse> Handle<TRequest, TResponse>(
+        TRequest request,
+        CancellationToken ct,
+        Func<TRequest, CancellationToken, ValueTask<TResponse>> next)
+        => next(request, ct);
+}
+```
+
+### Fix
+
+```csharp
+// ✅ A non-static class that implements IPipelineBehavior. Handle stays static.
+[PipelineBehavior(Order = 0)]
+public class LoggingBehavior : IPipelineBehavior
+{
+    public static ValueTask<TResponse> Handle<TRequest, TResponse>(
+        TRequest request,
+        CancellationToken ct,
+        Func<TRequest, CancellationToken, ValueTask<TResponse>> next)
+        => next(request, ct);
+}
+```
+
+### Checking in your generator
+
+Discover candidates with `CandidateFromAttributeSyntaxContext`, which, unlike `FromAttributeSyntaxContext`, also returns the types without the interface. `IsStatic` lets the message say what to change.
+
+```csharp
+var invalid = PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface(candidates);
+foreach (var c in invalid)
+{
+    context.ReportDiagnostic(Diagnostic.Create(
+        MissingInterfaceDescriptor,  // your DiagnosticDescriptor, DiagnosticSeverity.Warning
+        location,
+        c.BehaviorTypeName,
+        c.IsStatic ? "make the class non-static and implement IPipelineBehavior" : "implement IPipelineBehavior"));
+}
+```
+
+---
+
 ## Suppressing Warnings
 
-> **Note:** `ZAP001` and `ZAP002` are the reference codes used throughout this documentation. The actual diagnostic ID emitted to the user depends on the host generator (e.g. ZeroAlloc.Mediator may emit `ZAM001`). Check your generator's documentation for the exact codes to suppress.
+> **Note:** `ZAP001` to `ZAP003` are the reference codes used throughout this documentation. The actual diagnostic ID emitted to the user depends on the host generator (e.g. ZeroAlloc.Mediator may emit `ZAM001`). Check your generator's documentation for the exact codes to suppress.
 
 Using `#pragma`:
 

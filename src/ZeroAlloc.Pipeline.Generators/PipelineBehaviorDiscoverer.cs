@@ -30,6 +30,22 @@ public static class PipelineBehaviorDiscoverer
     }
 
     /// <summary>
+    /// Per-symbol transform for use with
+    /// <c>context.SyntaxProvider.ForAttributeWithMetadataName</c>, like
+    /// <see cref="FromAttributeSyntaxContext"/>, but returns a candidate for every type that carries
+    /// the attribute, including one that does not implement <c>ZeroAlloc.Pipeline.IPipelineBehavior</c>
+    /// and so never joins the pipeline. Pass the results to
+    /// <see cref="PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface"/> to report those.
+    /// </summary>
+    public static PipelineBehaviorCandidateInfo? CandidateFromAttributeSyntaxContext(GeneratorAttributeSyntaxContext ctx)
+    {
+        var symbol = ctx.TargetSymbol as INamedTypeSymbol;
+        if (symbol == null) return null;
+
+        return BuildCandidateInfo(symbol);
+    }
+
+    /// <summary>
     /// Discovers all pipeline behaviors in <paramref name="compilation"/>.
     /// Detects both direct <c>ZeroAlloc.Pipeline.PipelineBehaviorAttribute</c> usage and
     /// any subclasses of it (e.g. <c>ZeroAlloc.Mediator.PipelineBehaviorAttribute</c>).
@@ -43,6 +59,38 @@ public static class PipelineBehaviorDiscoverer
     /// </summary>
     public static IEnumerable<PipelineBehaviorInfo> Discover(Compilation compilation)
     {
+        foreach (var (symbol, pipelineAttr, semanticModel) in DiscoverAttributedTypes(compilation))
+        {
+            var info = BuildBehaviorInfo(symbol, pipelineAttr, semanticModel);
+            if (info != null)
+                yield return info;
+        }
+    }
+
+    /// <summary>
+    /// Returns a candidate for every type in <paramref name="compilation"/> that carries
+    /// <c>ZeroAlloc.Pipeline.PipelineBehaviorAttribute</c> or a subclass of it, including one that
+    /// does not implement <c>ZeroAlloc.Pipeline.IPipelineBehavior</c> and so is not returned by
+    /// <see cref="Discover"/>. Pass the results to
+    /// <see cref="PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface"/> to report those.
+    /// <para>
+    /// Prefer <see cref="CandidateFromAttributeSyntaxContext"/> with
+    /// <c>ForAttributeWithMetadataName</c> in production generators, as with <see cref="Discover"/>.
+    /// </para>
+    /// </summary>
+    public static IEnumerable<PipelineBehaviorCandidateInfo> DiscoverCandidates(Compilation compilation)
+    {
+        foreach (var (symbol, _, _) in DiscoverAttributedTypes(compilation))
+            yield return BuildCandidateInfo(symbol);
+    }
+
+    private static IEnumerable<(INamedTypeSymbol Symbol, AttributeData PipelineAttr, SemanticModel SemanticModel)>
+        DiscoverAttributedTypes(Compilation compilation)
+    {
+        // A partial class has one declaration per part, and every part with an attribute list
+        // resolves to the same symbol. Yield each type once.
+        var seen = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+
         foreach (var syntaxTree in compilation.SyntaxTrees)
         {
             var classDeclarations = syntaxTree.GetRoot()
@@ -58,18 +106,27 @@ public static class PipelineBehaviorDiscoverer
             foreach (var classDecl in classDeclarations)
             {
                 var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-                if (symbol == null) continue;
+                if (symbol == null || seen.Contains(symbol)) continue;
 
-                var info = TryGetBehaviorInfo(symbol, semanticModel);
-                if (info != null)
-                    yield return info;
+                var pipelineAttr = FindPipelineAttribute(symbol, semanticModel);
+                if (pipelineAttr == null) continue;
+
+                seen.Add(symbol);
+
+                // The attribute may sit on a part in another file; read its arguments with that
+                // file's model, since a semantic model only answers for its own syntax tree.
+                var attributeTree = pipelineAttr.ApplicationSyntaxReference?.SyntaxTree;
+                var attributeModel = attributeTree != null && attributeTree != syntaxTree
+                    ? compilation.GetSemanticModel(attributeTree)
+                    : semanticModel;
+                yield return (symbol, pipelineAttr, attributeModel);
             }
         }
     }
 
-    private static PipelineBehaviorInfo? TryGetBehaviorInfo(INamedTypeSymbol symbol, SemanticModel semanticModel)
+    /// <summary>Returns the attribute that is or derives from PipelineBehaviorAttribute, or null.</summary>
+    private static AttributeData? FindPipelineAttribute(INamedTypeSymbol symbol, SemanticModel semanticModel)
     {
-        // Must have an attribute that is or derives from PipelineBehaviorAttribute
         AttributeData? pipelineAttr = null;
         foreach (var attr in symbol.GetAttributes())
         {
@@ -97,19 +154,27 @@ public static class PipelineBehaviorDiscoverer
                 }
             }
         }
-        if (pipelineAttr == null) return null;
-
-        return BuildBehaviorInfo(symbol, pipelineAttr, semanticModel);
+        return pipelineAttr;
     }
+
+    private static PipelineBehaviorCandidateInfo BuildCandidateInfo(INamedTypeSymbol symbol)
+        => new PipelineBehaviorCandidateInfo(
+            symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            ImplementsPipelineBehavior(symbol),
+            symbol.IsStatic);
+
+    /// <summary>True when <paramref name="symbol"/> implements IPipelineBehavior or a sub-interface.</summary>
+    private static bool ImplementsPipelineBehavior(INamedTypeSymbol symbol)
+        => symbol.AllInterfaces.Any(i => InheritsFrom(i, IPipelineBehaviorFqn));
 
     private static PipelineBehaviorInfo? BuildBehaviorInfo(
         INamedTypeSymbol symbol,
         AttributeData pipelineAttr,
         SemanticModel semanticModel)
     {
-        // Must implement IPipelineBehavior (or a sub-interface)
-        var implementsPipeline = symbol.AllInterfaces.Any(i => InheritsFrom(i, IPipelineBehaviorFqn));
-        if (!implementsPipeline) return null;
+        // A type without the interface never joins the pipeline. It is surfaced as a
+        // PipelineBehaviorCandidateInfo instead, so a consumer can report it.
+        if (!ImplementsPipelineBehavior(symbol)) return null;
 
         var behaviorTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 

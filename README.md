@@ -70,7 +70,7 @@ BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests
 - **Compile-time discovery** — `PipelineBehaviorDiscoverer` and `FromAttributeSyntaxContext` for incremental generators
 - **Static emitter** — `PipelineEmitter.EmitChain` generates a nested static lambda chain from a behavior list and a `PipelineShape`
 - **`PipelineShape`** — describes type arguments, parameter names, and the innermost body; supports a factory delegate when the body embeds depth-indexed lambda names
-- **Diagnostic helpers** — `PipelineDiagnosticRules.FindMissingHandleMethod` and `FindDuplicateOrders` return offending behaviors; the caller maps them to framework-specific diagnostic IDs
+- **Diagnostic helpers** — `PipelineDiagnosticRules.FindMissingHandleMethod`, `FindDuplicateOrders` and `FindMissingPipelineBehaviorInterface` return offending behaviors; the caller maps them to framework-specific diagnostic IDs
 - **Zero allocation** — no reflection, no boxing, no delegate list per call
 - **netstandard2.0 + Native AOT** — works in trimmed, ahead-of-time compiled applications
 
