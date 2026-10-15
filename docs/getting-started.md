@@ -12,17 +12,23 @@ ZeroAlloc.Pipeline provides the shared contracts and tools that pipeline-aware s
 
 ## Installation
 
+Writing behaviors for a host framework such as ZeroAlloc.Mediator or ZeroAlloc.Validation? You need only the
+contracts package; the host's own generator discovers your behaviors:
+
 ```bash
 dotnet add package ZeroAlloc.Pipeline
-dotnet add package ZeroAlloc.Pipeline.Generators
 ```
 
+Building your own pipeline-aware source generator? `ZeroAlloc.Pipeline.Generators` is a Roslyn helper library,
+not a generator. Reference it from your generator project as a normal, private dependency, and ship
+`ZeroAlloc.Pipeline.Generators.dll` and `ZeroAlloc.Pipeline.dll` next to your generator in
+`analyzers/dotnet/cs`, because Roslyn does not load a generator's dependencies on its own:
+
 ```xml
-<PackageReference Include="ZeroAlloc.Pipeline" Version="*" />
-<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="*"
-                  OutputItemType="Analyzer"
-                  ReferenceOutputAssembly="false" />
+<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="1.*" PrivateAssets="all" />
 ```
+
+See [Build a Pipeline Generator](cookbook/04-build-a-pipeline-generator.md).
 
 ## Your First Behavior
 
