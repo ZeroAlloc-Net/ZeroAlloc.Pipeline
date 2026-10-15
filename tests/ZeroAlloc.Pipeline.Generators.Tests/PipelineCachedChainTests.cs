@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.Pipeline.Generators.Tests;
 
@@ -10,8 +11,16 @@ namespace ZeroAlloc.Pipeline.Generators.Tests;
 /// on every call. The cached form keeps each level's delegate in an instance field instead, so
 /// after the first call the chain allocates nothing.
 /// </summary>
+/// <remarks>
+/// Each probe compiles the chain into a host class and returns a delegate bound once to its
+/// <c>Send</c> or <c>Validate</c>, so a call through the delegate allocates nothing itself.
+/// <see cref="AllocationGate"/> measures the whole call: it settles the heap, warms up, and rounds
+/// the per-call figure up, so an allocation on only some calls still reads above 0.
+/// </remarks>
 public class PipelineCachedChainTests
 {
+    private const int Iterations = 1_000;
+
     private const string Ping = "global::App.Ping";
     private const string MediatorNext =
         "global::System.Func<global::App.Ping, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask<string>>";
@@ -124,16 +133,18 @@ public class PipelineCachedChainTests
     {
         var chain = PipelineEmitter.EmitCachedChain(TwoBehaviors, MediatorDiShape(), MediatorNext, "__sendPingNext");
 
-        Assert.Equal(0, MediatorBytesPerCall(chain.Expression, chain.MemberDeclarations));
+        AllocationGate.AssertBudgetValueTask(
+            budgetBytes: 0, Iterations, MediatorSend(chain.Expression, chain.MemberDeclarations), "cached Mediator DI chain");
     }
 
     [Fact]
     public void MediatorDiShape_UncachedChain_AllocatesPerCall()
     {
-        // The cost #117 removes: without the cache, each call allocates the capturing delegates.
+        // The cost #117 removes: without the cache, each call allocates the capturing delegates,
+        // 128 B on x64 for the two levels here.
         var chain = PipelineEmitter.EmitChain(TwoBehaviors, MediatorDiShape());
 
-        Assert.True(MediatorBytesPerCall(chain, []) > 0);
+        Assert.True(AllocationGate.MeasureBytesPerCallValueTask(Iterations, MediatorSend(chain, [])) > 0);
     }
 
     [Fact]
@@ -141,7 +152,8 @@ public class PipelineCachedChainTests
     {
         var chain = PipelineEmitter.EmitCachedChain(TwoBehaviors, ValidationNestedShape(), ValidationNext, "__validateNext");
 
-        Assert.Equal(0, ValidationBytesPerCall(chain.Expression, chain.MemberDeclarations));
+        AllocationGate.AssertBudget(
+            budgetBytes: 0, Iterations, ValidationValidate(chain.Expression, chain.MemberDeclarations), "cached nested-validator chain");
     }
 
     [Fact]
@@ -149,7 +161,7 @@ public class PipelineCachedChainTests
     {
         var chain = PipelineEmitter.EmitChain(TwoBehaviors, ValidationNestedShape());
 
-        Assert.True(ValidationBytesPerCall(chain, []) > 0);
+        Assert.True(AllocationGate.MeasureBytesPerCall(Iterations, ValidationValidate(chain, [])) > 0);
     }
 
     [Fact]
@@ -204,7 +216,8 @@ public class PipelineCachedChainTests
         }
         """;
 
-    private static long MediatorBytesPerCall(string expression, IReadOnlyList<string> members)
+    // A delegate bound once to the compiled MediatorService.Send.
+    private static Func<ValueTask<string>> MediatorSend(string expression, IReadOnlyList<string> members)
     {
         var source = $$"""
             #nullable enable
@@ -232,25 +245,23 @@ public class PipelineCachedChainTests
 
             public static class Probe
             {
-                public static long BytesPerCall()
+                public static global::System.Func<global::System.Threading.Tasks.ValueTask<string>> Send()
                 {
                     var service = new MediatorService();
                     var ping = new Ping();
-                    for (var i = 0; i < 100; i++) _ = service.Send(ping, default).Result;
-                    var before = global::System.GC.GetAllocatedBytesForCurrentThread();
-                    for (var i = 0; i < 1000; i++) _ = service.Send(ping, default).Result;
-                    return (global::System.GC.GetAllocatedBytesForCurrentThread() - before) / 1000;
+                    return () => service.Send(ping, default);
                 }
             }
 
             {{Behaviors}}
             """;
-        return (long)Compile(source).GetType("App.Probe")!.GetMethod("BytesPerCall")!.Invoke(null, null)!;
+        return (Func<ValueTask<string>>)Compile(source).GetType("App.Probe")!.GetMethod("Send")!.Invoke(null, null)!;
     }
 
-    private static long ValidationBytesPerCall(string expression, IReadOnlyList<string> members)
-        => (long)CreateValidator(expression, members).GetType().Assembly
-            .GetType("App.Probe")!.GetMethod("BytesPerCall")!.Invoke(null, null)!;
+    // A delegate bound once to the compiled ModelValidator.Validate.
+    private static Action ValidationValidate(string expression, IReadOnlyList<string> members)
+        => (Action)CreateValidator(expression, members).GetType().Assembly
+            .GetType("App.Probe")!.GetMethod("Validate")!.Invoke(null, null)!;
 
     private static object CreateValidator(string expression, IReadOnlyList<string> members)
     {
@@ -287,14 +298,11 @@ public class PipelineCachedChainTests
 
             public static class Probe
             {
-                public static long BytesPerCall()
+                public static global::System.Action Validate()
                 {
                     var validator = new ModelValidator();
                     var model = new Model();
-                    for (var i = 0; i < 100; i++) validator.Validate(model);
-                    var before = global::System.GC.GetAllocatedBytesForCurrentThread();
-                    for (var i = 0; i < 1000; i++) validator.Validate(model);
-                    return (global::System.GC.GetAllocatedBytesForCurrentThread() - before) / 1000;
+                    return () => validator.Validate(model);
                 }
             }
 
