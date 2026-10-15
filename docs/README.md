@@ -19,7 +19,7 @@ Shared building block for pipeline-aware Roslyn source generators.
 | 3 | [Pipeline Shape](pipeline-shape.md) | Describe the delegate shape for code generation |
 | 4 | [Pipeline Emitter](pipeline-emitter.md) | Emit a nested static lambda call chain |
 | 5 | [Pipeline Discoverer](pipeline-discoverer.md) | Discover behaviors at compile time |
-| 6 | [Diagnostics](diagnostics.md) | ZAP001 and ZAP002 reference |
+| 6 | [Diagnostics](diagnostics.md) | ZAP001 to ZAP003 reference |
 | 7 | [Performance](performance.md) | Zero-allocation pipeline dispatch |
 | 8 | [Testing](testing.md) | Test behaviors and generators |
 
@@ -57,6 +57,8 @@ context.SyntaxProvider
 // Check for issues
 var invalid = PipelineDiagnosticRules.FindMissingHandleMethod(behaviors, expectedTypeParamCount: 2);
 var dupes   = PipelineDiagnosticRules.FindDuplicateOrders(behaviors);
+var missing = PipelineDiagnosticRules.FindMissingPipelineBehaviorInterface(
+    PipelineBehaviorDiscoverer.DiscoverCandidates(compilation));
 
 // Emit the chain
 var shape = new PipelineShape

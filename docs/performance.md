@@ -65,6 +65,7 @@ The comparison is **static chain** (what `PipelineEmitter.EmitChain` generates) 
 
 **Key observations:**
 - Both approaches allocate **0 B** per call when the delegate chain is pre-built.
+- `EmittedChainAllocationTests` backs the static-chain 0 B: it discovers three behaviors, emits their chain with `PipelineEmitter.EmitChain`, compiles it, and asserts 0 B per call with `AllocationGate` on every test run.
 - For 1 behavior, the pre-built delegate is ~2× faster — the JIT pays a small generic specialization cost on the single-level static chain.
 - For 3+ behaviors, the static chain wins decisively (4–6×) because the JIT inlines static calls transitively, collapsing the entire chain into straight-line code. Delegate dispatch cannot inline across virtual call sites.
 

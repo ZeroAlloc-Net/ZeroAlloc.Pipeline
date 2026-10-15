@@ -12,17 +12,23 @@ Multiple packages in this family — see [Documentation](https://github.com/Zero
 
 ## Install
 
+Writing behaviors for a host framework such as ZeroAlloc.Mediator or ZeroAlloc.Validation? You need only the
+contracts package; the host's own generator discovers your behaviors:
+
 ```bash
 dotnet add package ZeroAlloc.Pipeline
-dotnet add package ZeroAlloc.Pipeline.Generators
 ```
 
+Building your own pipeline-aware source generator? `ZeroAlloc.Pipeline.Generators` is a Roslyn helper library,
+not a generator. Reference it from your generator project as a normal, private dependency, and ship
+`ZeroAlloc.Pipeline.Generators.dll` and `ZeroAlloc.Pipeline.dll` next to your generator in
+`analyzers/dotnet/cs`, because Roslyn does not load a generator's dependencies on its own:
+
 ```xml
-<PackageReference Include="ZeroAlloc.Pipeline" Version="*" />
-<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="*"
-                  OutputItemType="Analyzer"
-                  ReferenceOutputAssembly="false" />
+<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="1.*" PrivateAssets="all" />
 ```
+
+See [Build a Pipeline Generator](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/cookbook/04-build-a-pipeline-generator.md).
 
 ## Example
 
@@ -71,8 +77,8 @@ BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests
 - **Static emitter** — `PipelineEmitter.EmitChain` generates a nested static lambda chain from a behavior list and a `PipelineShape`; `EmitCachedChain` caches the delegates in instance fields when the body reads instance state
 - **`PipelineShape`** — describes type arguments, parameter names, and the innermost body; supports a factory delegate when the body embeds depth-indexed lambda names
 - **Diagnostic helpers** — `PipelineDiagnosticRules.FindMissingHandleMethod`, `FindDuplicateOrders` and `FindMissingPipelineBehaviorInterface` return offending behaviors; the caller maps them to framework-specific diagnostic IDs
-- **Zero allocation** — no reflection, no boxing, no delegate list per call
-- **netstandard2.0 + Native AOT** — works in trimmed, ahead-of-time compiled applications
+- **Zero allocation** — no reflection, no boxing, no delegate list per call; `EmittedChainAllocationTests` compiles an emitted 3-behavior chain and asserts 0 B per call with `AllocationGate`
+- **Native AOT** — `ZeroAlloc.Pipeline` targets netstandard2.0, net8.0 and net10.0 and works in trimmed, ahead-of-time compiled applications; `ZeroAlloc.Pipeline.Generators` targets netstandard2.0 for Roslyn
 
 ## Documentation
 
@@ -83,7 +89,7 @@ BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests
 | [Pipeline Shape](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-shape.md) | Describe the delegate shape for code generation |
 | [Pipeline Emitter](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-emitter.md) | Generate a nested static lambda call chain |
 | [Pipeline Discoverer](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-discoverer.md) | Discover behaviors at compile time |
-| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/diagnostics.md) | ZAP001, ZAP002 diagnostic rules reference |
+| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/diagnostics.md) | ZAP001 to ZAP003 diagnostic rules reference |
 | [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/performance.md) | Why static lambda chains allocate nothing |
 | [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/testing.md) | Test behaviors and generators built on this library |
 
