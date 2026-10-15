@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.0...v1.4.1) (2026-10-15)
+
+
+### Documentation
+
+* fix install guidance and diagnostics references in readme ([#130](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/130)) ([551ebb9](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/551ebb99bdeab86a2f3ac6e061be2bf35e73a03e))
+
+
+### Tests
+
+* measure cached-chain probes with AllocationGate ([#133](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/133)) ([8799d85](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/8799d85b4baef4396261e96b77ee407ced755cd3)), closes [#131](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/131)
+
 ## [1.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.3.0...v1.4.0) (2026-09-30)
 
 
