@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.1...v1.4.2) (2026-10-16)
+
+
+### Documentation
+
+* rewrite the readme as a product page ([#136](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/136)) ([461c51f](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/461c51fc0dbc9eba52866ecb7749a6ac65e8dca2))
+
 ## [1.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.0...v1.4.1) (2026-10-15)
 
 
