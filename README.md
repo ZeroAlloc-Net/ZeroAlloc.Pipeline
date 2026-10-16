@@ -2,44 +2,61 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ZeroAlloc.Pipeline.svg)](https://www.nuget.org/packages/ZeroAlloc.Pipeline)
 [![Build](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/LICENSE)
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-ZeroAlloc.Pipeline is the shared building block for pipeline-aware source generators in the ZeroAlloc ecosystem. It provides the `IPipelineBehavior` marker interface, `PipelineBehaviorAttribute`, and the Roslyn-based discovery, validation, and code-emission utilities that generators like ZeroAlloc.Mediator and ZeroAlloc.Validation build on. All pipeline wiring is resolved at compile time — no reflection, no virtual dispatch, no heap allocation per call.
+Compile-time pipeline behaviors for .NET source generators: behaviors are discovered at build time and
+emitted as a static call chain, with no reflection, no allocation per call, and NativeAOT support.
 
-Multiple packages in this family — see [Documentation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/tree/main/docs/) or NuGet for the full list.
+It is the building block behind the pipelines of ZeroAlloc.Mediator and ZeroAlloc.Validation. Write a
+behavior once against its contracts, or use its Roslyn helpers to give your own generator the same pipeline.
+
+## Why ZeroAlloc.Pipeline
+
+- **No allocation per call.** An emitted three-behavior chain is compiled and asserted at 0 B per call
+  with `AllocationGate` on every test run. Chains that read instance state get a cached form that is also
+  asserted at 0 B per call.
+- **Faster as the pipeline grows.** In the same benchmark run, a pre-built delegate chain takes 4.25× the
+  time of the static chain at 3 behaviors and 6.38× at 5. With a single behavior the delegate chain is
+  faster; see [Performance](#performance).
+- **Works under NativeAOT and trimming.** The contracts package is `IsAotCompatible`, and CI publishes and
+  runs a NativeAOT smoke app on every build. The pipeline is plain static calls, so the trimmer has
+  nothing to keep alive.
+- **Mistakes caught at build time.** Rule helpers find a missing or invalid `Handle` method, duplicate
+  `Order` values, and a `[PipelineBehavior]` class that forgot `IPipelineBehavior`; your generator reports
+  them as compiler diagnostics instead of a pipeline that silently skips a step.
 
 ## Install
 
-Writing behaviors for a host framework such as ZeroAlloc.Mediator or ZeroAlloc.Validation? You need only the
-contracts package; the host's own generator discovers your behaviors:
+Writing behaviors for a host such as ZeroAlloc.Mediator? You need only the contracts:
 
 ```bash
 dotnet add package ZeroAlloc.Pipeline
 ```
 
-Building your own pipeline-aware source generator? `ZeroAlloc.Pipeline.Generators` is a Roslyn helper library,
-not a generator. Reference it from your generator project as a normal, private dependency, and ship
-`ZeroAlloc.Pipeline.Generators.dll` and `ZeroAlloc.Pipeline.dll` next to your generator in
-`analyzers/dotnet/cs`, because Roslyn does not load a generator's dependencies on its own:
+Building your own pipeline-aware generator? Add the Roslyn helper library as a private dependency and ship
+its DLLs next to your generator, as described in
+[Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/getting-started.md):
 
 ```xml
 <PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="1.*" PrivateAssets="all" />
 ```
 
-See [Build a Pipeline Generator](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/cookbook/04-build-a-pipeline-generator.md).
+## Quick start
 
-## Example
+A behavior is a class with a static `Handle` method. The host generator finds it at compile time and
+calls it directly; there is nothing to register.
 
 ```csharp
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using ZeroAlloc.Pipeline;
 
-// 1. Implement IPipelineBehavior and decorate with [PipelineBehavior]
 [PipelineBehavior(Order = 1)]
 public class LoggingBehavior : IPipelineBehavior
 {
-    // 2. Expose a public static Handle method matching the host framework's delegate shape
     public static async ValueTask<TResponse> Handle<TRequest, TResponse>(
         TRequest request,
         CancellationToken ct,
@@ -51,48 +68,73 @@ public class LoggingBehavior : IPipelineBehavior
         return response;
     }
 }
-
-// 3. The host generator (e.g. ZeroAlloc.Mediator) picks this up at compile time
-//    and wires it into the generated pipeline — no registration required.
 ```
+
+Inside a generator, `PipelineEmitter` turns the discovered behaviors into the call chain:
+
+```csharp
+using ZeroAlloc.Pipeline.Generators;
+
+PipelineBehaviorInfo[] behaviors =
+[
+    new("global::App.AuthBehavior", order: 1, appliesTo: null, typeParamCount: 2),
+    new("global::App.LoggingBehavior", order: 2, appliesTo: null, typeParamCount: 2),
+];
+
+var shape = new PipelineShape
+{
+    TypeArguments = ["global::App.Ping", "string"],
+    OuterParameterNames = ["request", "ct"],
+    LambdaParameterPrefixes = ["r", "c"],
+    InnermostBodyFactory = depth => $"global::App.PingHandler.Handle(r{depth}, c{depth})",
+};
+
+string chain = PipelineEmitter.EmitChain(behaviors, shape);
+// global::App.AuthBehavior.Handle<global::App.Ping, string>(request, ct, static (r1, c1) =>
+//     global::App.LoggingBehavior.Handle<global::App.Ping, string>(r1, c1, static (r2, c2) =>
+//         global::App.PingHandler.Handle(r2, c2)))
+```
+
+## What you get
+
+- **Behavior contracts**: `IPipelineBehavior` and `[PipelineBehavior]`, with ordering and scoping a
+  behavior to one request type through `AppliesTo`.
+- **Your own attribute name**: host frameworks subclass `[PipelineBehavior]`, and discovery follows the
+  inheritance chain.
+- **Incremental discovery**: finds behaviors from `ForAttributeWithMetadataName` or a whole compilation.
+- **Chain emission**: static lambda chains, plus a cached form for bodies that read instance state.
+- **Reusable rules**: the three validation checks above, mapped to your generator's own diagnostic IDs.
 
 ## Performance
 
-ZeroAlloc.Pipeline emits static nested lambda chains. Static lambdas carry no closure allocation, and the JIT inlines static call chains aggressively — collapsing N behaviors into straight-line code.
+The static chain that `PipelineEmitter.EmitChain` generates, against a delegate chain built once at
+startup, the fastest runtime-composed alternative. Ratio is mean time relative to the static chain in
+the same run; lower is faster.
 
-| | 1 behavior | 3 behaviors | 5 behaviors | Allocated |
-|---|:---:|:---:|:---:|:---:|
-| **Static chain** | 4.1 ns | 2.3 ns | 2.8 ns | **0 B** |
-| Pre-built delegate chain | 2.2 ns | 9.9 ns | 17.6 ns | 0 B |
-| Speedup | 0.5× | **4.3×** | **6.4×** | — |
+| Behaviors | Static chain | Pre-built delegate chain | Allocated, both |
+|---|---:|---:|---:|
+| 1 | 1.00 | 0.53 | 0 B |
+| 3 | 1.00 | 4.25 | 0 B |
+| 5 | 1.00 | 6.38 | 0 B |
 
-BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK — [`tests/ZeroAlloc.Pipeline.Benchmarks`](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/tests/ZeroAlloc.Pipeline.Benchmarks)
+BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK. Full results, method and
+caveats: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/performance.md).
 
-## Features
+## Learn more
 
-- **`IPipelineBehavior`** — marker interface; no contract imposed on Handle signature
-- **`PipelineBehaviorAttribute`** — `Order` (execution position) and `AppliesTo` (type scoping)
-- **Attribute subclassing** — framework packages define their own alias; discovery follows the inheritance chain
-- **Compile-time discovery** — `PipelineBehaviorDiscoverer` and `FromAttributeSyntaxContext` for incremental generators
-- **Static emitter** — `PipelineEmitter.EmitChain` generates a nested static lambda chain from a behavior list and a `PipelineShape`; `EmitCachedChain` caches the delegates in instance fields when the body reads instance state
-- **`PipelineShape`** — describes type arguments, parameter names, and the innermost body; supports a factory delegate when the body embeds depth-indexed lambda names
-- **Diagnostic helpers** — `PipelineDiagnosticRules.FindMissingHandleMethod`, `FindDuplicateOrders` and `FindMissingPipelineBehaviorInterface` return offending behaviors; the caller maps them to framework-specific diagnostic IDs
-- **Zero allocation** — no reflection, no boxing, no delegate list per call; `EmittedChainAllocationTests` compiles an emitted 3-behavior chain and asserts 0 B per call with `AllocationGate`
-- **Native AOT** — `ZeroAlloc.Pipeline` targets netstandard2.0, net8.0 and net10.0 and works in trimmed, ahead-of-time compiled applications; `ZeroAlloc.Pipeline.Generators` targets netstandard2.0 for Roslyn
-
-## Documentation
-
-| Page | Description |
-|------|-------------|
-| [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/getting-started.md) | Write your first behavior and see it get picked up |
-| [Pipeline Behaviors](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-behaviors.md) | `IPipelineBehavior`, `PipelineBehaviorAttribute`, ordering, scoping |
-| [Pipeline Shape](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-shape.md) | Describe the delegate shape for code generation |
-| [Pipeline Emitter](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-emitter.md) | Generate a nested static lambda call chain |
-| [Pipeline Discoverer](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-discoverer.md) | Discover behaviors at compile time |
-| [Diagnostics](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/diagnostics.md) | ZAP001 to ZAP003 diagnostic rules reference |
-| [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/performance.md) | Why static lambda chains allocate nothing |
-| [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/testing.md) | Test behaviors and generators built on this library |
-
-## License
-
-MIT
+- **Documentation:** [pipeline.zeroalloc.net](https://pipeline.zeroalloc.net), covering behaviors,
+  shapes, the emitter and discoverer, the diagnostics reference, testing and a cookbook.
+- **Related packages:**
+  - [ZeroAlloc.Mediator](https://github.com/ZeroAlloc-Net/ZeroAlloc.Mediator): source-generated mediator
+    whose pipeline behaviors are built on this library. Docs: [mediator.zeroalloc.net](https://mediator.zeroalloc.net)
+  - [ZeroAlloc.Validation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Validation): source-generated
+    validation whose generator is built on this library's helpers, and plugs into Mediator through
+    `ZeroAlloc.Mediator.Validation`. Docs: [validation.zeroalloc.net](https://validation.zeroalloc.net)
+  - [ZeroAlloc.Authorization](https://github.com/ZeroAlloc-Net/ZeroAlloc.Authorization): policy
+    authorization that gates Mediator dispatch through a pipeline behavior in
+    `ZeroAlloc.Mediator.Authorization`. Docs: [authorization.zeroalloc.net](https://authorization.zeroalloc.net)
+  - [ZeroAlloc.Results](https://github.com/ZeroAlloc-Net/ZeroAlloc.Results): the result type the Mediator
+    validation and authorization behaviors return their failures in. Docs: [results.zeroalloc.net](https://results.zeroalloc.net)
+- **Contributing:** issues and pull requests are welcome on
+  [GitHub](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues).
+- **License:** [MIT](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/LICENSE).
