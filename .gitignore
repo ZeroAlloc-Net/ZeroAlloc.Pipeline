@@ -8,3 +8,6 @@ artifacts/
 
 # BenchmarkDotNet writes its reports here when the benchmarks are run locally.
 BenchmarkDotNet.Artifacts/
+
+# Test results and coverage reports
+TestResults/
