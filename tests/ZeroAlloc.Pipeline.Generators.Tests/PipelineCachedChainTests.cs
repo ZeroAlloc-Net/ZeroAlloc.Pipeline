@@ -180,9 +180,13 @@ public class PipelineCachedChainTests
         Assert.Equal(["outer", "inner", "child", "outer", "inner", "child"], (List<string>)log.GetValue(null)!);
     }
 
+    // The behaviors are not inlined, as a real behavior that does work or awaits next is not.
+    // A one-line pass-through that the JIT inlines lets it devirtualize next and put the
+    // uncached chain's capturing delegates on the stack, so that chain would allocate nothing.
     private const string Behaviors = """
         public static class Outer
         {
+            [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
             public static global::System.Threading.Tasks.ValueTask<TResponse> Handle<TRequest, TResponse>(
                 TRequest request, global::System.Threading.CancellationToken ct,
                 global::System.Func<TRequest, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask<TResponse>> next)
@@ -197,6 +201,7 @@ public class PipelineCachedChainTests
 
         public static class Inner
         {
+            [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
             public static global::System.Threading.Tasks.ValueTask<TResponse> Handle<TRequest, TResponse>(
                 TRequest request, global::System.Threading.CancellationToken ct,
                 global::System.Func<TRequest, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask<TResponse>> next)
