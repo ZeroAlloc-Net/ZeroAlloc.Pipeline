@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.2...v1.4.3) (2026-10-18)
+
+
+### Tests
+
+* model pipeline behaviors that the JIT does not inline ([#145](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/145)) ([d5f6588](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/d5f658880258eb927857293fbe7e0cca5b0e6a81))
+
 ## [1.4.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.1...v1.4.2) (2026-10-16)
 
 
