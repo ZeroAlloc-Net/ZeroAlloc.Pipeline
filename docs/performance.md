@@ -64,7 +64,7 @@ The comparison is **static chain** (what `PipelineEmitter.EmitChain` generates) 
 | 3 | 1.00 | **4.24** | 4.15–4.53 | 0 B |
 | 5 | 1.00 | **3.72** | 3.54–4.03 | 0 B |
 
-With **0 behaviors** both chains are below what BenchmarkDotNet can resolve, and it reports the static chain as a zero measurement: with nothing to call, the JIT reduces it to the handler call alone. That row has no meaningful ratio and is left out.
+With **0 behaviors** both chains are below what BenchmarkDotNet can resolve, and it reports the static chain as a zero measurement: with no behavior in the way, the JIT folds the whole call. That row has no meaningful ratio and is left out.
 
 **Key observations:**
 - Both approaches allocate **0 B** per call when the delegate chain is pre-built.
