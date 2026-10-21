@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.3...v1.4.4) (2026-10-21)
+
+
+### Documentation
+
+* re-run the benchmarks pinned, with three launches ([#151](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/151)) ([12c9105](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/12c91053732f80bdd2b4b9879ad5825764af44cd))
+
 ## [1.4.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.2...v1.4.3) (2026-10-18)
 
 
