@@ -18,9 +18,9 @@ behavior once against its contracts, or use its Roslyn helpers to give your own 
 - **No allocation per call.** An emitted three-behavior chain is compiled and asserted at 0 B per call
   with `AllocationGate` on every test run. Chains that read instance state get a cached form that is also
   asserted at 0 B per call.
-- **Faster as the pipeline grows.** In the same benchmark run, a pre-built delegate chain takes 4.25× the
-  time of the static chain at 3 behaviors and 6.38× at 5. With a single behavior the delegate chain is
-  faster; see [Performance](#performance).
+- **Faster as the pipeline grows.** In the same benchmark run, a pre-built delegate chain takes 4.24× the
+  time of the static chain at 3 behaviors and 3.72× at 5. With a single behavior the two are level; see
+  [Performance](#performance).
 - **Works under NativeAOT and trimming.** The contracts package is `IsAotCompatible`, and CI publishes and
   runs a NativeAOT smoke app on every build. The pipeline is plain static calls, so the trimmer has
   nothing to keep alive.
@@ -114,11 +114,11 @@ the same run; lower is faster.
 
 | Behaviors | Static chain | Pre-built delegate chain | Allocated, both |
 |---|---:|---:|---:|
-| 1 | 1.00 | 0.53 | 0 B |
-| 3 | 1.00 | 4.25 | 0 B |
-| 5 | 1.00 | 6.38 | 0 B |
+| 1 | 1.00 | 1.03 | 0 B |
+| 3 | 1.00 | 4.24 | 0 B |
+| 5 | 1.00 | 3.72 | 0 B |
 
-BenchmarkDotNet v0.15.8, .NET 10.0.4, 12th Gen Intel Core i9-12900HK. Full results, method and
+BenchmarkDotNet v0.15.8, .NET 10.0.13, three launches; allocations are exact. Full results, method and
 caveats: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/performance.md).
 
 ## Learn more

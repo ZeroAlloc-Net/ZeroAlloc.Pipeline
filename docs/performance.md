@@ -45,29 +45,32 @@ Behaviors are resolved by the generator — the compiled output contains direct 
 
 ## Benchmark Results
 
-BenchmarkDotNet v0.15.8, Windows 11, 12th Gen Intel Core i9-12900HK 2.50 GHz, .NET 10.0.4 — [`tests/ZeroAlloc.Pipeline.Benchmarks`](../tests/ZeroAlloc.Pipeline.Benchmarks).
+Measured 2026-10-21 on an otherwise idle machine — [`tests/ZeroAlloc.Pipeline.Benchmarks`](../tests/ZeroAlloc.Pipeline.Benchmarks).
 
-The comparison is **static chain** (what `PipelineEmitter.EmitChain` generates) vs a **pre-built delegate chain** (interface-based pipeline with chain allocated once at startup, not per call — the best achievable runtime alternative).
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26300.9711)
+12th Gen Intel Core i9-12900HK 2.50GHz, 1 CPU, 20 logical and 14 physical cores
+.NET SDK 10.0.402
+  [Host] : .NET 10.0.13 (10.0.13, 10.0.1326.50504), X64 RyuJIT x86-64-v3
+```
 
-| Method | Categories | Mean | Ratio | Allocated |
-|--------|------------|-----:|------:|----------:|
-| Static chain | 0 behaviors | 0.06 ns | — | 0 B |
-| Pre-built delegate chain | 0 behaviors | 1.04 ns | — | 0 B |
-| | | | | |
-| Static chain | 1 behavior | 4.11 ns | 1.00 | 0 B |
-| Pre-built delegate chain | 1 behavior | 2.16 ns | 0.53 | 0 B |
-| | | | | |
-| Static chain | 3 behaviors | 2.33 ns | 1.00 | 0 B |
-| Pre-built delegate chain | 3 behaviors | 9.93 ns | 4.25 | 0 B |
-| | | | | |
-| Static chain | 5 behaviors | 2.76 ns | 1.00 | 0 B |
-| Pre-built delegate chain | 5 behaviors | 17.62 ns | 6.38 | 0 B |
+> Allocations are exact. Speed is shown as same-run ratios; absolute timings are not published.
+
+The comparison is **static chain** (what `PipelineEmitter.EmitChain` generates) vs a **pre-built delegate chain** (interface-based pipeline with chain allocated once at startup, not per call — the best achievable runtime alternative). Each benchmark ran out of process in three launches, pinned to two performance cores. `Ratio` is the delegate chain's mean time relative to the static chain with the same number of behaviors, in the same run; `Launch range` is the lowest and highest ratio of the three launches.
+
+| Behaviors | Static chain | Pre-built delegate chain | Launch range | Allocated, both |
+|---:|---:|---:|---:|---:|
+| 1 | 1.00 | 1.03 | 0.93–1.60 | 0 B |
+| 3 | 1.00 | **4.24** | 4.15–4.53 | 0 B |
+| 5 | 1.00 | **3.72** | 3.54–4.03 | 0 B |
+
+With **0 behaviors** both chains are below what BenchmarkDotNet can resolve, and it reports the static chain as a zero measurement: with no behavior in the way, the JIT folds the whole call. That row has no meaningful ratio and is left out.
 
 **Key observations:**
 - Both approaches allocate **0 B** per call when the delegate chain is pre-built.
 - `EmittedChainAllocationTests` backs the static-chain 0 B: it discovers three behaviors, emits their chain with `PipelineEmitter.EmitChain`, compiles it, and asserts 0 B per call with `AllocationGate` on every test run.
-- For 1 behavior, the pre-built delegate is ~2× faster — the JIT pays a small generic specialization cost on the single-level static chain.
-- For 3+ behaviors, the static chain wins decisively (4–6×) because the JIT inlines static calls transitively, collapsing the entire chain into straight-line code. Delegate dispatch cannot inline across virtual call sites.
+- For 1 behavior the two are level; one of the three launches put the delegate chain 60% behind, the other two within 7%.
+- For 3+ behaviors, the static chain wins decisively (3.7–4.2×) because the JIT inlines static calls transitively, collapsing the entire chain into straight-line code. Delegate dispatch cannot inline across virtual call sites.
 
 ## Static vs Reflection Dispatch
 
