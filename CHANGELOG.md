@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.4...v1.5.0) (2026-11-11)
+
+
+### Features
+
+* add .NET 11 support ([#168](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/168)) ([ecf2045](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/ecf20459c2cc5696547b25d5915f205e0c3c3f0a))
+
+
+### Documentation
+
+* add context7.json to claim the library on Context7 ([#167](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/167)) ([b5bd645](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/b5bd645bbb4ff2468e3e2d725693316ce01ddcb3))
+
 ## [1.4.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.3...v1.4.4) (2026-10-21)
 
 
