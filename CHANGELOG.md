@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.5.0...v1.5.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* embed PDBs so Go to Definition shows the package source ([#181](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/181)) ([fca84e8](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/fca84e8edacaf27d175e9c50de8834c74bdfb9a1))
+
 ## [1.5.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.4.4...v1.5.0) (2026-11-11)
 
 
