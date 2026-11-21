@@ -133,50 +133,18 @@ public class PipelineEmitterTests
     }
 
     [Fact]
-    public void EmitChain_EmitStaticLambdas_False_OmitsStaticKeyword()
+    public void EmitChain_EveryLambdaIsStatic()
     {
         var behaviors = new[]
         {
             new PipelineBehaviorInfo("global::App.LoggingBehavior", 0, null, 2),
             new PipelineBehaviorInfo("global::App.ValidationBehavior", 1, null, 2),
-        };
-        var shape = new PipelineShape
-        {
-            TypeArguments = ["global::App.Ping", "string"],
-            OuterParameterNames = ["request", "ct"],
-            LambdaParameterPrefixes = ["r", "c"],
-            InnermostBodyFactory = depth => $"{{ return _services.GetRequiredService<Handler>().Handle(r{depth}, c{depth}); }}",
-            EmitStaticLambdas = false,
+            new PipelineBehaviorInfo("global::App.AuthBehavior", 2, null, 2),
         };
 
-        var result = PipelineEmitter.EmitChain(behaviors, shape);
+        var result = PipelineEmitter.EmitChain(behaviors, MediatorShape("global::App.Ping", "string", "{ return default; }"));
 
-        // No 'static' keyword on any of the lambdas — they can capture instance fields.
-        Assert.DoesNotContain("static (", result, StringComparison.Ordinal);
-        Assert.Contains("(r1, c1)", result, StringComparison.Ordinal);
-        Assert.Contains("(r2, c2)", result, StringComparison.Ordinal);
-        // Innermost body still embedded correctly.
-        Assert.Contains("_services.GetRequiredService<Handler>()", result, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void EmitChain_EmitStaticLambdas_DefaultsTrue()
-    {
-        var shape = new PipelineShape
-        {
-            TypeArguments = ["global::App.Ping", "string"],
-            OuterParameterNames = ["request", "ct"],
-            LambdaParameterPrefixes = ["r", "c"],
-            InnermostBodyTemplate = "{ return default; }",
-        };
-
-        // No EmitStaticLambdas set — should default to true.
-        Assert.True(shape.EmitStaticLambdas);
-
-        var result = PipelineEmitter.EmitChain(
-            [new PipelineBehaviorInfo("global::App.B", 0, null, 2)],
-            shape);
-
-        Assert.Contains("static (r1, c1)", result, StringComparison.Ordinal);
+        Assert.Equal(3, result.Split("=>").Length - 1);
+        Assert.Equal(3, result.Split("static (").Length - 1);
     }
 }

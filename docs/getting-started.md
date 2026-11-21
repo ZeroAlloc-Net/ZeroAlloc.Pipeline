@@ -25,7 +25,7 @@ not a generator. Reference it from your generator project as a normal, private d
 `analyzers/dotnet/cs`, because Roslyn does not load a generator's dependencies on its own:
 
 ```xml
-<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="1.*" PrivateAssets="all" />
+<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="2.*" PrivateAssets="all" />
 ```
 
 See [Build a Pipeline Generator](cookbook/04-build-a-pipeline-generator.md).

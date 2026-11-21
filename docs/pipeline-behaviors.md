@@ -110,6 +110,27 @@ public static ValidationResult Handle<T>(
     => next(instance);
 ```
 
+A host whose pipeline threads state, see [`PipelineShape.State`](pipeline-shape.md#state), calls a `Handle` with one more type parameter, the state type, last. The state is the second parameter of both `Handle` and `next`, and the behavior passes it on unchanged. The behavior never sees the host's concrete state type:
+
+```csharp
+// A stateful request/response shape (3 type params)
+public static ValueTask<TResponse> Handle<TRequest, TResponse, TState>(
+    TRequest request,
+    TState state,
+    CancellationToken ct,
+    Func<TRequest, TState, CancellationToken, ValueTask<TResponse>> next)
+    => next(request, state, ct);
+
+// A stateful validation shape (2 type params)
+public static ValidationResult Handle<T, TState>(
+    T instance,
+    TState state,
+    Func<T, TState, ValidationResult> next)
+    => next(instance, state);
+```
+
+Which shape a behavior implements is the host framework's contract; its documentation says which one it calls.
+
 ## Rules & Best Practices
 
 - Always implement both `IPipelineBehavior` **and** carry `[PipelineBehaviorAttribute]` — either alone is not enough

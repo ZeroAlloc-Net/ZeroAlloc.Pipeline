@@ -16,8 +16,8 @@ behavior once against its contracts, or use its Roslyn helpers to give your own 
 ## Why ZeroAlloc.Pipeline
 
 - **No allocation per call.** An emitted three-behavior chain is compiled and asserted at 0 B per call
-  with `AllocationGate` on every test run. Chains that read instance state get a cached form that is also
-  asserted at 0 B per call.
+  with `AllocationGate` on every test run. A chain that reads instance state passes it through every
+  level as state, so its lambdas stay `static` and it is also asserted at 0 B per call.
 - **Faster as the pipeline grows.** In the same benchmark run, a pre-built delegate chain takes 4.24× the
   time of the static chain at 3 behaviors and 3.72× at 5. With a single behavior the two are level; see
   [Performance](#performance).
@@ -41,7 +41,7 @@ its DLLs next to your generator, as described in
 [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/getting-started.md):
 
 ```xml
-<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="1.*" PrivateAssets="all" />
+<PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="2.*" PrivateAssets="all" />
 ```
 
 ## Quick start
@@ -96,6 +96,12 @@ string chain = PipelineEmitter.EmitChain(behaviors, shape);
 //         global::App.PingHandler.Handle(r2, c2)))
 ```
 
+When the innermost body needs instance state, such as a scope's `IServiceProvider`, set
+`State = new PipelineState { TypeName = "global::System.IServiceProvider", Argument = "_services" }`. The
+emitter passes it through every level as the second argument, so the lambdas stay `static` and the
+behaviors take it as a last type parameter, `Handle<TRequest, TResponse, TState>`. See
+[Pipeline Shape](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/pipeline-shape.md#state).
+
 ## What you get
 
 - **Behavior contracts**: `IPipelineBehavior` and `[PipelineBehavior]`, with ordering and scoping a
@@ -103,7 +109,7 @@ string chain = PipelineEmitter.EmitChain(behaviors, shape);
 - **Your own attribute name**: host frameworks subclass `[PipelineBehavior]`, and discovery follows the
   inheritance chain.
 - **Incremental discovery**: finds behaviors from `ForAttributeWithMetadataName` or a whole compilation.
-- **Chain emission**: static lambda chains, plus a cached form for bodies that read instance state.
+- **Chain emission**: static lambda chains, with an optional state slot for bodies that read instance state.
 - **Reusable rules**: the three validation checks above, mapped to your generator's own diagnostic IDs.
 
 ## Performance

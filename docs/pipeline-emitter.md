@@ -89,53 +89,35 @@ var result = PipelineEmitter.EmitChain([], shape);
 // Returns: "{ var h = new PingHandler(); return h.Handle(r0, c0); }"
 ```
 
-## Instance State: `EmitCachedChain`
+## Instance State: `PipelineShape.State`
 
-When the innermost body reads instance state, such as an injected `IServiceProvider` or a nested validator held in a field, the lambdas cannot be `static`, so the shape sets `EmitStaticLambdas = false`. The compiler does not cache a lambda that captures `this`, so `EmitChain` then allocates one delegate per behavior on every call.
-
-`EmitCachedChain` emits the same chain but keeps each level's `next` delegate in an instance field, created on first use:
+Every lambda `EmitChain` writes is `static`. When the innermost body reads instance state, such as an injected `IServiceProvider` or a nested validator held in a field, the shape passes that state through the chain with [`State`](pipeline-shape.md#state), so no lambda captures it:
 
 ```csharp
-public static PipelineCachedChain EmitCachedChain(
-    IReadOnlyList<PipelineBehaviorInfo> behaviors,
-    PipelineShape shape,
-    string nextDelegateType,   // type of the behaviors' next parameter, fully qualified
-    string cacheFieldPrefix)   // unique per chain in the containing type
-```
-
-```csharp
-var chain = PipelineEmitter.EmitCachedChain(
-    behaviors,
-    shape,
-    "global::System.Func<global::App.Ping, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask<string>>",
-    "__sendPingNext");
-
-sb.AppendLine($"        return {chain.Expression};");   // inside an instance method
-foreach (var member in chain.MemberDeclarations)          // at class scope
-    sb.AppendLine($"    {member}");
+var shape = new PipelineShape
+{
+    TypeArguments           = ["global::App.Ping", "string"],
+    OuterParameterNames     = ["request", "ct"],
+    LambdaParameterPrefixes = ["r", "c"],
+    State = new PipelineState { TypeName = "global::System.IServiceProvider", Argument = "_services" },
+    // With no behaviors, EmitChain returns the body itself, so depth 0 uses the outer names.
+    InnermostBodyFactory    = depth => depth == 0
+        ? "_services.GetRequiredService<PingHandler>().Handle(request, ct)"
+        : $"{{ return s{depth}.GetRequiredService<PingHandler>().Handle(r{depth}, c{depth}); }}",
+};
 ```
 
 With two behaviors this gives:
 
 ```csharp
-return global::App.Outer.Handle<global::App.Ping, string>(
-    request, ct, __sendPingNext1 ??= (r1, c1) =>
-    global::App.Inner.Handle<global::App.Ping, string>(
-        r1, c1, __sendPingNext2 ??= (r2, c2) =>
-        { return _services.Handle(r2, c2); }));
-
-private global::System.Func<global::App.Ping, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask<string>>? __sendPingNext1;
-private global::System.Func<global::App.Ping, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask<string>>? __sendPingNext2;
+return global::App.Outer.Handle<global::App.Ping, string, global::System.IServiceProvider>(
+    request, _services, ct, static (r1, s1, c1) =>
+    global::App.Inner.Handle<global::App.Ping, string, global::System.IServiceProvider>(
+        r1, s1, c1, static (r2, s2, c2) =>
+        { return s2.GetRequiredService<PingHandler>().Handle(r2, c2); }));
 ```
 
-After the first call the chain allocates nothing. Notes:
-
-- The lambdas read the next level's field, so they are never `static`; `EmitStaticLambdas` is ignored.
-- The declarations are annotated nullable; emit them in a `#nullable enable` context.
-- Two threads making the first call together may each create a delegate. They are equivalent, and one is kept.
-- A chain whose body reads no instance state does not need this: `EmitChain` with static lambdas already allocates nothing.
-
-`EmitChain` itself is unchanged.
+The compiler creates each `static` lambda once, so the chain allocates nothing per call and nothing per instance, in a static or an instance member alike. A body that captures `this` instead fails to compile with CS8821.
 
 ## Rules & Best Practices
 

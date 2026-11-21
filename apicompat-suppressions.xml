@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
+<Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:ZeroAlloc.Pipeline.Generators.PipelineCachedChain</Target>
+    <Left>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Left>
+    <Right>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:ZeroAlloc.Pipeline.Generators.PipelineEmitter.EmitCachedChain(System.Collections.Generic.IReadOnlyList{ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo},ZeroAlloc.Pipeline.Generators.PipelineShape,System.String,System.String)</Target>
+    <Left>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Left>
+    <Right>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:ZeroAlloc.Pipeline.Generators.PipelineShape.get_EmitStaticLambdas</Target>
+    <Left>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Left>
+    <Right>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:ZeroAlloc.Pipeline.Generators.PipelineShape.set_EmitStaticLambdas(System.Boolean)</Target>
+    <Left>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Left>
+    <Right>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+</Suppressions>

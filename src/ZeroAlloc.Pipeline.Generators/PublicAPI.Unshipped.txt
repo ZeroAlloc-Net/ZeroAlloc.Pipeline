@@ -1,1 +1,20 @@
 #nullable enable
+static ZeroAlloc.Pipeline.Generators.PipelineDiagnosticRules.FindMissingHandleMethod(System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>! behaviors, ZeroAlloc.Pipeline.Generators.PipelineShape! shape) -> System.Collections.Generic.IEnumerable<ZeroAlloc.Pipeline.Generators.PipelineBehaviorInfo!>!
+ZeroAlloc.Pipeline.Generators.PipelineShape.HandleTypeParameterCount.get -> int
+ZeroAlloc.Pipeline.Generators.PipelineShape.State.get -> ZeroAlloc.Pipeline.Generators.PipelineState?
+ZeroAlloc.Pipeline.Generators.PipelineShape.State.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineState
+ZeroAlloc.Pipeline.Generators.PipelineState.<Clone>$() -> ZeroAlloc.Pipeline.Generators.PipelineState!
+ZeroAlloc.Pipeline.Generators.PipelineState.Argument.get -> string!
+ZeroAlloc.Pipeline.Generators.PipelineState.Argument.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineState.Equals(ZeroAlloc.Pipeline.Generators.PipelineState? other) -> bool
+ZeroAlloc.Pipeline.Generators.PipelineState.LambdaParameterPrefix.get -> string!
+ZeroAlloc.Pipeline.Generators.PipelineState.LambdaParameterPrefix.init -> void
+ZeroAlloc.Pipeline.Generators.PipelineState.PipelineState() -> void
+ZeroAlloc.Pipeline.Generators.PipelineState.TypeName.get -> string!
+ZeroAlloc.Pipeline.Generators.PipelineState.TypeName.init -> void
+override ZeroAlloc.Pipeline.Generators.PipelineState.Equals(object? obj) -> bool
+override ZeroAlloc.Pipeline.Generators.PipelineState.GetHashCode() -> int
+override ZeroAlloc.Pipeline.Generators.PipelineState.ToString() -> string!
+static ZeroAlloc.Pipeline.Generators.PipelineState.operator !=(ZeroAlloc.Pipeline.Generators.PipelineState? left, ZeroAlloc.Pipeline.Generators.PipelineState? right) -> bool
+static ZeroAlloc.Pipeline.Generators.PipelineState.operator ==(ZeroAlloc.Pipeline.Generators.PipelineState? left, ZeroAlloc.Pipeline.Generators.PipelineState? right) -> bool

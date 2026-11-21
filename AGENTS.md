@@ -8,7 +8,9 @@ call chain. Mediator and Validation consume both.
 
 ## Layout
 
-- `src/ZeroAlloc.Pipeline` targets `netstandard2.0;net8.0;net10.0;net11.0` and is `IsAotCompatible`.
+- `src/ZeroAlloc.Pipeline` targets `netstandard2.0;net10.0;net11.0`, and its net10.0/net11.0 targets are
+  `IsAotCompatible`. It keeps `netstandard2.0` because `ZeroAlloc.Pipeline.Generators` references it,
+  and that project and the generators that consume it load into the compiler.
 - `src/ZeroAlloc.Pipeline.Generators` targets `netstandard2.0` only. It is a plain library, not an
   analyzer project, so it never runs in this repo's own builds. `Polyfills.cs` supplies the C# features
   that `netstandard2.0` lacks.
@@ -26,8 +28,7 @@ call chain. Mediator and Validation consume both.
 ## Build and test
 
 Prerequisites: `global.json` pins SDK 11.0.100 (`rollForward: latestMinor`). Tests run on `net10.0` and
-`net11.0`, so both the .NET 10 and the .NET 11 runtime must be installed. The library's `net8.0` target
-only compiles; no test project runs on it, so the .NET 8 runtime is not needed. The AOT smoke targets
+`net11.0`, so both the .NET 10 and the .NET 11 runtime must be installed. The AOT smoke targets
 `net11.0` and needs clang and `zlib1g-dev`.
 
 CI job `build` in `.github/workflows/ci.yml`:
@@ -78,8 +79,8 @@ dotnet test tests/ZeroAlloc.Pipeline.Generators.Tests -c Release -f net10.0 --fi
 - `LangVersion` is `latest`, but `netstandard2.0` code sees only that framework's BCL plus `Polyfills.cs`. Do not use
   a BCL API that is missing there without a conditional-compilation branch.
 - The hot path here is the code `PipelineEmitter` emits, not the emitter itself. The budget is exactly
-  0 B per call for the static chain and for the cached chain, asserted in `EmittedChainAllocationTests`
-  and `PipelineCachedChainTests`, which compile the emitted code and measure it with `AllocationGate`.
+  0 B per call for the static chain with and without state, asserted in `EmittedChainAllocationTests`
+  and `PipelineStateChainTests`, which compile the emitted code and measure it with `AllocationGate`.
   Change the emitted shape only together with those tests, then re-measure and update `docs/performance.md`
   and the README figures.
 - `tests/ZeroAlloc.Pipeline.Benchmarks` targets `net10.0` only, and `ZeroAlloc.Pipeline.AotSmoke` targets

@@ -17,6 +17,20 @@ public static class PipelineDiagnosticRules
         => behaviors.Where(b => !b.HasValidHandleMethod(expectedTypeParamCount));
 
     /// <summary>
+    /// Returns behaviors that do not have a valid <c>Handle</c> method for <paramref name="shape"/>:
+    /// one whose type parameter count is <see cref="PipelineShape.HandleTypeParameterCount"/>, which
+    /// includes the state type when the shape threads a <see cref="PipelineShape.State"/>.
+    /// Map these to your own diagnostic ID (e.g. ZAM005, ZV005).
+    /// </summary>
+    public static IEnumerable<PipelineBehaviorInfo> FindMissingHandleMethod(
+        IEnumerable<PipelineBehaviorInfo> behaviors,
+        PipelineShape shape)
+    {
+        if (shape == null) throw new System.ArgumentNullException(nameof(shape));
+        return FindMissingHandleMethod(behaviors, shape.HandleTypeParameterCount);
+    }
+
+    /// <summary>
     /// Returns types that carry <c>[PipelineBehavior]</c> but do not implement
     /// <c>ZeroAlloc.Pipeline.IPipelineBehavior</c>. Discovery leaves them out of the pipeline, so
     /// they silently never run. <see cref="PipelineBehaviorCandidateInfo.IsStatic"/> tells a static
