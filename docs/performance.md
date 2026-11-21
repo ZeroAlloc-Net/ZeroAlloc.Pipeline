@@ -116,6 +116,6 @@ ZeroAlloc.Pipeline is fully AOT-safe. Because all dispatch is static and resolve
 ## Tips for Maximum Performance
 
 1. Keep `Handle` methods lean — expensive logic in a behavior negates the allocation win
-2. Avoid capturing variables in `InnermostBodyTemplate` / `InnermostBodyFactory` — static lambdas must be capture-free
+2. Never capture variables in `InnermostBodyTemplate` / `InnermostBodyFactory`: the lambdas are always `static`, so a capture fails to compile. Pass instance state through `PipelineShape.State` instead
 3. Use `FromAttributeSyntaxContext` in generators — reduces IDE latency during development
 4. Sort behaviors by `Order` once (at generation time), not at runtime

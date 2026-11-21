@@ -69,6 +69,12 @@ foreach (var b in invalid)
 }
 ```
 
+When your pipeline threads state through [`PipelineShape.State`](pipeline-shape.md#state), the behaviors' `Handle` takes one more type parameter, the state type. Pass the shape instead of a count, so the check always matches what the emitter calls:
+
+```csharp
+var invalid = PipelineDiagnosticRules.FindMissingHandleMethod(behaviors, shape); // shape.HandleTypeParameterCount
+```
+
 ---
 
 ## ZAP002 — Duplicate Order Value
