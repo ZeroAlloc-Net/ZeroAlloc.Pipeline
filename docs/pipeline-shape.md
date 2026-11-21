@@ -146,11 +146,11 @@ public static ValueTask<TResponse> Handle<TRequest, TResponse, TState>(
     => next(request, state, ct);
 ```
 
-The innermost body reads the state through its lambda parameter at the deepest level, `s{depth}`:
+The innermost body reads the state through its lambda parameter at the deepest level, `s{depth}`. With no behaviors, `EmitChain` returns the body itself after `return`, so the depth-0 body is an expression over the outer names:
 
 ```csharp
 InnermostBodyFactory = depth => depth == 0
-    ? "{ return _services.GetRequiredService<PingHandler>().Handle(request, ct); }"
+    ? "_services.GetRequiredService<PingHandler>().Handle(request, ct)"
     : $"{{ return s{depth}.GetRequiredService<PingHandler>().Handle(r{depth}, c{depth}); }}",
 ```
 

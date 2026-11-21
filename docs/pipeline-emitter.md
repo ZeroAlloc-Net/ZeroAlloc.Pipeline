@@ -100,8 +100,10 @@ var shape = new PipelineShape
     OuterParameterNames     = ["request", "ct"],
     LambdaParameterPrefixes = ["r", "c"],
     State = new PipelineState { TypeName = "global::System.IServiceProvider", Argument = "_services" },
-    InnermostBodyFactory    = depth =>
-        $"{{ return s{depth}.GetRequiredService<PingHandler>().Handle(r{depth}, c{depth}); }}",
+    // With no behaviors, EmitChain returns the body itself, so depth 0 uses the outer names.
+    InnermostBodyFactory    = depth => depth == 0
+        ? "_services.GetRequiredService<PingHandler>().Handle(request, ct)"
+        : $"{{ return s{depth}.GetRequiredService<PingHandler>().Handle(r{depth}, c{depth}); }}",
 };
 ```
 
