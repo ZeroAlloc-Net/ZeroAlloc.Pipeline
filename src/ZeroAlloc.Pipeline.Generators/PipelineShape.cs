@@ -8,14 +8,16 @@ namespace ZeroAlloc.Pipeline.Generators;
 public sealed record PipelineShape
 {
     /// <summary>
-    /// Concrete type arguments for <c>Handle&lt;...&gt;</c>.
+    /// Concrete type arguments for <c>Handle&lt;...&gt;</c>, without the state type: when
+    /// <see cref="State"/> is set, the emitter appends <see cref="PipelineState.TypeName"/>.
     /// ZMediator: ["global::App.Ping", "string"].
     /// ZValidation: ["global::App.Order"].
     /// </summary>
     public required string[] TypeArguments { get; init; }
 
     /// <summary>
-    /// Parameter names at the outermost call site.
+    /// Parameter names at the outermost call site, without the state: when <see cref="State"/>
+    /// is set, the emitter passes <see cref="PipelineState.Argument"/> after the first of them.
     /// ZMediator: ["request", "ct"].
     /// ZValidation: ["instance"].
     /// </summary>
@@ -50,15 +52,22 @@ public sealed record PipelineShape
     public System.Func<int, string>? InnermostBodyFactory { get; init; }
 
     /// <summary>
-    /// Whether <see cref="PipelineEmitter"/> emits each lambda with the <c>static</c> keyword.
-    /// Defaults to <c>true</c> — appropriate when the chain is rooted in a static method that
-    /// has no <c>this</c> to capture.
+    /// The state threaded through every level of the chain, or <c>null</c> for a pipeline whose
+    /// innermost body reads no instance state.
     /// <para>
-    /// Set to <c>false</c> when the chain is emitted inside an instance method and the
-    /// innermost body needs to read instance fields (e.g. an injected
-    /// <c>IServiceProvider</c>). Without this, the body would have to thread state via
-    /// <c>AsyncLocal</c> or similar workarounds.
+    /// Every lambda the emitter writes is <c>static</c>, so the innermost body cannot read
+    /// <c>this</c> or a local. When it needs instance state, pass that state here and read it in
+    /// the body through the state's lambda parameter, <c>{prefix}{depth}</c>, such as <c>s2</c>.
+    /// A body that captures instead fails to compile rather than allocating a delegate per call.
     /// </para>
     /// </summary>
-    public bool EmitStaticLambdas { get; init; } = true;
+    public PipelineState? State { get; init; }
+
+    /// <summary>
+    /// The number of type parameters a behavior's <c>Handle</c> takes in this pipeline:
+    /// <see cref="TypeArguments"/>, plus one for the state type when <see cref="State"/> is set.
+    /// <see cref="PipelineDiagnosticRules.FindMissingHandleMethod(System.Collections.Generic.IEnumerable{PipelineBehaviorInfo}, PipelineShape)"/>
+    /// checks the behaviors against it.
+    /// </summary>
+    public int HandleTypeParameterCount => (TypeArguments?.Length ?? 0) + (State is null ? 0 : 1);
 }

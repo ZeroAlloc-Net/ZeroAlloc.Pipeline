@@ -20,7 +20,15 @@ public sealed record PipelineShape
     public required string[] LambdaParameterPrefixes { get; init; }
     public string            InnermostBodyTemplate   { get; init; } = string.Empty;
     public Func<int, string>? InnermostBodyFactory   { get; init; }
-    public bool              EmitStaticLambdas       { get; init; } = true;
+    public PipelineState?    State                   { get; init; }
+    public int               HandleTypeParameterCount { get; }   // TypeArguments + 1 with State
+}
+
+public sealed record PipelineState
+{
+    public required string TypeName              { get; init; }
+    public required string Argument              { get; init; }
+    public string          LambdaParameterPrefix { get; init; } = "s";
 }
 ```
 
@@ -112,9 +120,43 @@ var shape = new PipelineShape
 };
 ```
 
-### `EmitStaticLambdas`
+### `State`
 
-Whether `EmitChain` writes each lambda as `static`. Leave it `true`, the default, when the innermost body reads no instance state: static lambdas are created once, so the chain allocates nothing. Set it to `false` when the body reads instance fields, such as an injected `IServiceProvider`. A lambda that captures `this` is then allocated on every call; use [`EmitCachedChain`](pipeline-emitter.md#instance-state-emitcachedchain) to cache those delegates. `EmitCachedChain` ignores this property.
+Every lambda the emitter writes is `static`, so the compiler creates each one once and the chain allocates nothing. A `static` lambda cannot read `this` or a local, so when the innermost body needs instance state, such as a scope's `IServiceProvider` or the validator's nested validators, pass that state through the chain instead of capturing it:
+
+```csharp
+State = new PipelineState
+{
+    TypeName = "global::System.IServiceProvider", // appended to the Handle type arguments
+    Argument = "_services",                       // passed at the outermost call
+    // LambdaParameterPrefix = "s"                // s1, s2, ... at each level, the default
+}
+```
+
+The state goes in a fixed position, so one behavior works with every host:
+
+- its type is the **last** type argument of `Handle`;
+- the state is the **second** argument, right after the request or model, of both `Handle` and `next`.
+
+```csharp
+// The behavior a stateful request/response pipeline calls
+public static ValueTask<TResponse> Handle<TRequest, TResponse, TState>(
+    TRequest request, TState state, CancellationToken ct,
+    Func<TRequest, TState, CancellationToken, ValueTask<TResponse>> next)
+    => next(request, state, ct);
+```
+
+The innermost body reads the state through its lambda parameter at the deepest level, `s{depth}`:
+
+```csharp
+InnermostBodyFactory = depth => depth == 0
+    ? "{ return _services.GetRequiredService<PingHandler>().Handle(request, ct); }"
+    : $"{{ return s{depth}.GetRequiredService<PingHandler>().Handle(r{depth}, c{depth}); }}",
+```
+
+A body that reads instance state without `State` does not compile: the compiler reports CS8821 on the `static` lambda, instead of the chain allocating a delegate per call. Leave `State` null when the body reads no instance state.
+
+`HandleTypeParameterCount` is the number of type parameters a behavior's `Handle` takes in this pipeline, `TypeArguments.Length` plus one with `State`. Pass the shape to `PipelineDiagnosticRules.FindMissingHandleMethod(behaviors, shape)` to check the behaviors against it.
 
 ## Rules & Best Practices
 
@@ -122,6 +164,7 @@ Whether `EmitChain` writes each lambda as `static`. Leave it `true`, the default
 - Supply either `InnermostBodyTemplate` or `InnermostBodyFactory` — not both, not neither
 - Use `InnermostBodyFactory` when the body references lambda parameter names (the common case)
 - Type arguments must be fully qualified (`global::` prefix) to be safe in any namespace context
+- `State.LambdaParameterPrefix` must differ from every prefix in `LambdaParameterPrefixes` (throws `ArgumentException` if not)
 
 ## Common Pitfalls
 

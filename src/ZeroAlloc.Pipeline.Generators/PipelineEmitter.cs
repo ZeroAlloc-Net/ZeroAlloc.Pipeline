@@ -11,26 +11,22 @@ public static class PipelineEmitter
 
     /// <summary>
     /// Emits a nested static lambda call chain for the given behaviors and shape.
+    /// <para>
+    /// Every lambda is <c>static</c>, so the compiler creates each one once and a call through the
+    /// chain allocates no delegate. When <see cref="PipelineShape.State"/> is set, the state is
+    /// passed as each <c>Handle</c>'s second argument and each lambda's second parameter, and its
+    /// type is appended to the type arguments, so the innermost body reads it as
+    /// <c>{prefix}{depth}</c> instead of capturing it.
+    /// </para>
     /// </summary>
     /// <param name="behaviors">
     /// Behaviors to chain, pre-filtered (AppliesTo already checked) and sorted by Order ascending.
     /// </param>
-    /// <param name="shape">Delegate shape describing type args, parameter names, and the innermost body.</param>
+    /// <param name="shape">Delegate shape describing type args, parameter names, the state and the innermost body.</param>
     /// <returns>A C# expression string ready to be placed after <c>return </c> in a generated method.</returns>
     public static string EmitChain(
         IReadOnlyList<PipelineBehaviorInfo> behaviors,
         PipelineShape shape)
-        => EmitChain(behaviors, shape, static _ => "");
-
-    /// <param name="behaviors">See <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/>.</param>
-    /// <param name="shape">See <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/>.</param>
-    /// <param name="nextPrefix">
-    /// Written before the <c>next</c> lambda passed at each level, given the lambda's level.
-    /// </param>
-    private static string EmitChain(
-        IReadOnlyList<PipelineBehaviorInfo> behaviors,
-        PipelineShape shape,
-        System.Func<int, string> nextPrefix)
     {
         if (behaviors == null) throw new System.ArgumentNullException(nameof(behaviors));
         if (shape == null) throw new System.ArgumentNullException(nameof(shape));
@@ -42,6 +38,7 @@ public static class PipelineEmitter
             throw new System.ArgumentException("OuterParameterNames must contain at least one parameter name.", nameof(shape));
         if (shape.InnermostBodyFactory == null && string.IsNullOrEmpty(shape.InnermostBodyTemplate))
             throw new System.ArgumentException("Either InnermostBodyFactory or InnermostBodyTemplate must be set.", nameof(shape));
+        ValidateState(shape);
 
         var depth = behaviors.Count;
         var innermostBody = shape.InnermostBodyFactory != null
@@ -51,99 +48,60 @@ public static class PipelineEmitter
         if (behaviors.Count == 0)
             return innermostBody;
 
-        var typeArgs = "<" + string.Join(", ", shape.TypeArguments) + ">";
-        var staticPrefix = shape.EmitStaticLambdas ? "static " : "";
+        var state = shape.State;
+        var typeArgs = "<" + string.Join(", ", shape.TypeArguments) + (state is null ? "" : ", " + state.TypeName) + ">";
 
-        // Build innermost lambda: [static] (r{depth}, c{depth}) => { ... }
-        var lambdaParams = BuildLambdaParams(shape.LambdaParameterPrefixes, depth);
-        var innermost = $"{nextPrefix(depth)}{staticPrefix}{lambdaParams} =>{Indent2}{innermostBody}";
-
-        var result = innermost;
+        // Build innermost lambda: static (r{depth}, s{depth}, c{depth}) => { ... }
+        var result = $"static ({BuildParamRefs(shape.LambdaParameterPrefixes, state, depth)}) =>{Indent2}{innermostBody}";
 
         for (var i = depth - 1; i >= 0; i--)
         {
             var behavior = behaviors[i];
             if (i == 0)
             {
-                // Outermost: use the real parameter names
-                var outerParams = string.Join(", ", shape.OuterParameterNames);
+                // Outermost: use the real parameter names, and the state's argument expression.
+                var outerParams = InsertState(shape.OuterParameterNames, state?.Argument);
                 result = $"{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent1}{outerParams}, {result})";
             }
             else
             {
                 // Intermediate: wrap in a lambda using level-i param names
-                var levelParams = BuildLambdaParams(shape.LambdaParameterPrefixes, i);
-                var levelParamRefs = BuildParamRefs(shape.LambdaParameterPrefixes, i);
-                result = $"{nextPrefix(i)}{staticPrefix}{levelParams} =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParamRefs}, {result})";
+                var levelParams = BuildParamRefs(shape.LambdaParameterPrefixes, state, i);
+                result = $"static ({levelParams}) =>{Indent1}{behavior.BehaviorTypeName}.Handle{typeArgs}({Indent2}{levelParams}, {result})";
             }
         }
 
         return result;
     }
 
-    /// <summary>
-    /// Emits the same call chain as <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/>, but caches each level's <c>next</c>
-    /// delegate in an instance field, so the chain allocates no delegate after its first call.
-    /// Use it when the innermost body reads instance state: <see cref="EmitChain(IReadOnlyList{PipelineBehaviorInfo}, PipelineShape)"/> then needs
-    /// <see cref="PipelineShape.EmitStaticLambdas"/> set to <c>false</c>, and every call allocates
-    /// one delegate per behavior, because the compiler does not cache a lambda that captures
-    /// <c>this</c>.
-    /// <para>
-    /// Each level reads <c>field ??= lambda</c>. The lambdas read the next level's field, so they
-    /// are never <c>static</c> and <see cref="PipelineShape.EmitStaticLambdas"/> is ignored. Emit
-    /// the chain in an instance member of the type that declares
-    /// <see cref="PipelineCachedChain.MemberDeclarations"/>. Two threads that make the first call
-    /// together may each create a delegate; both are equivalent and one is kept.
-    /// </para>
-    /// </summary>
-    /// <param name="behaviors">
-    /// Behaviors to chain, pre-filtered (AppliesTo already checked) and sorted by Order ascending.
-    /// </param>
-    /// <param name="shape">Delegate shape describing type args, parameter names, and the innermost body.</param>
-    /// <param name="nextDelegateType">
-    /// The fully qualified type of the <c>next</c> parameter of the behaviors' <c>Handle</c>, with
-    /// the shape's type arguments substituted, e.g.
-    /// <c>global::System.Func&lt;global::App.Ping, global::System.Threading.CancellationToken, global::System.Threading.Tasks.ValueTask&lt;string&gt;&gt;</c>.
-    /// It is the type of every cache field.
-    /// </param>
-    /// <param name="cacheFieldPrefix">
-    /// The name of the cache fields before their level number, e.g. <c>__sendPingNext</c> gives
-    /// <c>__sendPingNext1</c>, <c>__sendPingNext2</c>. It must be unique among the chains of the
-    /// containing type.
-    /// </param>
-    public static PipelineCachedChain EmitCachedChain(
-        IReadOnlyList<PipelineBehaviorInfo> behaviors,
-        PipelineShape shape,
-        string nextDelegateType,
-        string cacheFieldPrefix)
+    private static void ValidateState(PipelineShape shape)
     {
-        if (string.IsNullOrWhiteSpace(nextDelegateType))
-            throw new System.ArgumentException("nextDelegateType must name the type of the behaviors' next delegate.", nameof(nextDelegateType));
-        if (string.IsNullOrWhiteSpace(cacheFieldPrefix))
-            throw new System.ArgumentException("cacheFieldPrefix must be a valid identifier prefix.", nameof(cacheFieldPrefix));
+        var state = shape.State;
+        if (state is null)
+            return;
 
-        var nonStaticShape = shape?.EmitStaticLambdas == true ? shape with { EmitStaticLambdas = false } : shape;
-        var expression = EmitChain(behaviors, nonStaticShape!, level => $"{cacheFieldPrefix}{level} ??= ");
-
-        var members = new string[behaviors.Count];
-        for (var level = 1; level <= behaviors.Count; level++)
-            members[level - 1] = $"private {nextDelegateType}? {cacheFieldPrefix}{level};";
-
-        return new PipelineCachedChain(expression, members);
+        if (string.IsNullOrWhiteSpace(state.TypeName))
+            throw new System.ArgumentException("State.TypeName must name the state type.", nameof(shape));
+        if (string.IsNullOrWhiteSpace(state.Argument))
+            throw new System.ArgumentException("State.Argument must be the expression passed as the state.", nameof(shape));
+        if (string.IsNullOrWhiteSpace(state.LambdaParameterPrefix))
+            throw new System.ArgumentException("State.LambdaParameterPrefix must be a valid identifier prefix.", nameof(shape));
+        if (shape.LambdaParameterPrefixes.Contains(state.LambdaParameterPrefix, System.StringComparer.Ordinal))
+            throw new System.ArgumentException(
+                $"State.LambdaParameterPrefix '{state.LambdaParameterPrefix}' is also in LambdaParameterPrefixes; the lambda parameters would collide.",
+                nameof(shape));
     }
 
-    private static string BuildLambdaParams(string[] prefixes, int level)
-    {
-        if (prefixes.Length == 1)
-            return $"({prefixes[0]}{level})";
+    // The level's lambda parameters, with the state's after the first: r1, s1, c1.
+    private static string BuildParamRefs(string[] prefixes, PipelineState? state, int level)
+        => InsertState(prefixes.Select(p => $"{p}{level}"), state is null ? null : $"{state.LambdaParameterPrefix}{level}");
 
-        var parts = prefixes.Select(p => $"{p}{level}");
-        return "(" + string.Join(", ", parts) + ")";
-    }
-
-    private static string BuildParamRefs(string[] prefixes, int level)
+    // Joins the parameters, with the state, when there is one, as the second.
+    private static string InsertState(IEnumerable<string> parameters, string? state)
     {
-        var parts = prefixes.Select(p => $"{p}{level}");
+        var parts = parameters.ToList();
+        if (state != null)
+            parts.Insert(1, state);
         return string.Join(", ", parts);
     }
 }
