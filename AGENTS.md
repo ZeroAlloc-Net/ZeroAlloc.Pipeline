@@ -9,8 +9,8 @@ call chain. Mediator and Validation consume both.
 ## Layout
 
 - `src/ZeroAlloc.Pipeline` targets `netstandard2.0;net10.0;net11.0`, and its net10.0/net11.0 targets are
-  `IsAotCompatible`. It keeps `netstandard2.0` because `ZeroAlloc.Pipeline.Generators` references it, and that project and the
-  generators that consume it load into the compiler.
+  `IsAotCompatible`. It keeps `netstandard2.0` because `ZeroAlloc.Pipeline.Generators` references it,
+  and that project and the generators that consume it load into the compiler.
 - `src/ZeroAlloc.Pipeline.Generators` targets `netstandard2.0` only. It is a plain library, not an
   analyzer project, so it never runs in this repo's own builds. `Polyfills.cs` supplies the C# features
   that `netstandard2.0` lacks.
