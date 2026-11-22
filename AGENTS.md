@@ -8,9 +8,10 @@ call chain. Mediator and Validation consume both.
 
 ## Layout
 
-- `src/ZeroAlloc.Pipeline` targets `netstandard2.0;net10.0;net11.0`, and its net10.0/net11.0 targets are
-  `IsAotCompatible`. It keeps `netstandard2.0` because `ZeroAlloc.Pipeline.Generators` references it,
-  and that project and the generators that consume it load into the compiler.
+- `src/ZeroAlloc.Pipeline` targets `net10.0;net11.0` and is `IsAotCompatible`. `ZeroAlloc.Pipeline.Generators`
+  does not reference it: the discoverer matches `PipelineBehaviorAttribute` and `IPipelineBehavior` by
+  fully qualified name, so the contracts never load into the compiler. Keep it that way; a reference would
+  force `netstandard2.0` back onto the contracts.
 - `src/ZeroAlloc.Pipeline.Generators` targets `netstandard2.0` only. It is a plain library, not an
   analyzer project, so it never runs in this repo's own builds. `Polyfills.cs` supplies the C# features
   that `netstandard2.0` lacks.
@@ -75,7 +76,7 @@ dotnet test tests/ZeroAlloc.Pipeline.Generators.Tests -c Release -f net10.0 --fi
 
 - `TreatWarningsAsErrors` is on, together with `EnforceCodeStyleInBuild` and the Meziantou, Roslynator and
   ZeroAlloc analyzers. Those three apply to every target except `netstandard2.0`, so the generators
-  project and the `netstandard2.0` target of the contracts project are not checked by them.
+  project is not checked by them.
 - `LangVersion` is `latest`, but `netstandard2.0` code sees only that framework's BCL plus `Polyfills.cs`. Do not use
   a BCL API that is missing there without a conditional-compilation branch.
 - The hot path here is the code `PipelineEmitter` emits, not the emitter itself. The budget is exactly

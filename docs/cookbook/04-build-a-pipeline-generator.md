@@ -20,10 +20,14 @@ Wire `PipelineBehaviorDiscoverer`, `PipelineShape`, and `PipelineEmitter` togeth
 ## Project Setup
 
 ```bash
-dotnet add package ZeroAlloc.Pipeline
 dotnet add package ZeroAlloc.Pipeline.Generators
 dotnet add package Microsoft.CodeAnalysis.CSharp
 ```
+
+The generator project needs only `ZeroAlloc.Pipeline.Generators`, as a private dependency whose DLL you ship
+in `analyzers/dotnet/cs`. It does not need `ZeroAlloc.Pipeline`: the helper library finds behaviors by the
+fully qualified names of `PipelineBehaviorAttribute` and `IPipelineBehavior`. Consumers of your generator add
+`ZeroAlloc.Pipeline` to the projects that declare behaviors.
 
 ## The Generator
 

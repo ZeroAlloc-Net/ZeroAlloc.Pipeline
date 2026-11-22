@@ -37,7 +37,7 @@ dotnet add package ZeroAlloc.Pipeline
 ```
 
 Building your own pipeline-aware generator? Add the Roslyn helper library as a private dependency and ship
-its DLLs next to your generator, as described in
+`ZeroAlloc.Pipeline.Generators.dll` next to your generator, as described in
 [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/blob/main/docs/getting-started.md):
 
 ```xml

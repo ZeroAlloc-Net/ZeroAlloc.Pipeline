@@ -21,8 +21,10 @@ dotnet add package ZeroAlloc.Pipeline
 
 Building your own pipeline-aware source generator? `ZeroAlloc.Pipeline.Generators` is a Roslyn helper library,
 not a generator. Reference it from your generator project as a normal, private dependency, and ship
-`ZeroAlloc.Pipeline.Generators.dll` and `ZeroAlloc.Pipeline.dll` next to your generator in
-`analyzers/dotnet/cs`, because Roslyn does not load a generator's dependencies on its own:
+`ZeroAlloc.Pipeline.Generators.dll` next to your generator in `analyzers/dotnet/cs`, because Roslyn does
+not load a generator's dependencies on its own. Do not ship `ZeroAlloc.Pipeline.dll`: the helper library
+does not use it, and it matches the contracts by their fully qualified names. The helper library does not
+depend on `ZeroAlloc.Pipeline`, so referencing it no longer brings the contracts package along:
 
 ```xml
 <PackageReference Include="ZeroAlloc.Pipeline.Generators" Version="2.*" PrivateAssets="all" />
