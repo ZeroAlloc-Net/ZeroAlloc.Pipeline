@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.5.1...v1.5.2) (2026-11-22)
+
+
+### Bug Fixes
+
+* build Pipeline.Generators against Roslyn 5.0 so every .NET 10 SDK loads the generators that bundle it ([#197](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/issues/197)) ([2f80baf](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/2f80baf90257bdfed7d796e968a7ed84478e294d))
+
 ## [1.5.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.5.0...v1.5.1) (2026-11-16)
 
 
