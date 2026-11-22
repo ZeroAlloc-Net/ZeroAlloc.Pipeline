@@ -22,8 +22,13 @@ Wire `PipelineBehaviorDiscoverer`, `PipelineShape`, and `PipelineEmitter` togeth
 ```bash
 dotnet add package ZeroAlloc.Pipeline
 dotnet add package ZeroAlloc.Pipeline.Generators
-dotnet add package Microsoft.CodeAnalysis.CSharp
+dotnet add package Microsoft.CodeAnalysis.CSharp --version 5.0.0
 ```
+
+Reference the oldest Roslyn your consumers' compilers run, not the newest. The compiler loads a generator
+only when it is at least the Roslyn version the generator references; an older one skips it with warning
+`CS9057`, and nothing is generated. 5.0.0 is the compiler of the .NET 10 SDK 10.0.100, so every .NET 10 and
+.NET 11 SDK loads the generator. `ZeroAlloc.Pipeline.Generators` references 5.0.0 for the same reason.
 
 ## The Generator
 
