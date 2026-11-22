@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.5.1...v2.0.0) (2026-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* ZeroAlloc.Pipeline no longer ships a netstandard2.0 asset, so a netstandard2.0 consumer must move to net10.0 or later, and ZeroAlloc.Pipeline.Generators no longer depends on ZeroAlloc.Pipeline, so a project that relied on getting the contracts through it must reference ZeroAlloc.Pipeline itself and a generator project must stop shipping ZeroAlloc.Pipeline.dll. See the Behaviour change section of the PR for migration steps.
+* the ZeroAlloc.Pipeline net8.0 asset is no longer shipped; PipelineShape.EmitStaticLambdas, PipelineEmitter.EmitCachedChain and PipelineCachedChain are removed and every emitted lambda is static, so a chain body that reads instance state must take it through PipelineShape.State. See the Behaviour change section of the release for the migration steps.
+
+### Features
+
+* add a FindMissingHandleMethod overload that checks behaviors against a PipelineShape ([bac8d4b](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/bac8d4bece8bdd96301e3658913a503efc3f3a31))
+* drop the unused ZeroAlloc.Pipeline reference from Pipeline.Generators and the netstandard2.0 target ([08386ef](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/08386efec2fc9db239dfcc8e65b50f40e2ee58ed))
+* remove EmitStaticLambdas, EmitCachedChain and PipelineCachedChain in favour of PipelineShape.State ([bac8d4b](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/bac8d4bece8bdd96301e3658913a503efc3f3a31))
+* target net10.0 and net11.0 in ZeroAlloc.Pipeline, drop net8.0 ([bac8d4b](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/bac8d4bece8bdd96301e3658913a503efc3f3a31))
+* thread pipeline state through next so every emitted lambda is static ([bac8d4b](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/commit/bac8d4bece8bdd96301e3658913a503efc3f3a31))
+
 ## [1.5.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.Pipeline/compare/v1.5.0...v1.5.1) (2026-11-16)
 
 
