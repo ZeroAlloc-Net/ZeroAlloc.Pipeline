@@ -29,4 +29,14 @@
     <Right>lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
+  <!-- ZeroAlloc.Pipeline 2.0.0 drops the netstandard2.0 asset (this change) and the net8.0 asset
+       (the 2026-11 framework change). Both are intended; baseline is 1.5.1. -->
+  <Suppression>
+    <DiagnosticId>PKV006</DiagnosticId>
+    <Target>.NETStandard,Version=v2.0</Target>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>PKV006</DiagnosticId>
+    <Target>net8.0</Target>
+  </Suppression>
 </Suppressions>
