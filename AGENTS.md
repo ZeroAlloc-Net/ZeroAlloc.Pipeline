@@ -65,6 +65,11 @@ dotnet build tests/ZeroAlloc.Pipeline.Benchmarks -c Release
 dotnet run --project tests/ZeroAlloc.Pipeline.Benchmarks -c Release --no-build -- --filter "${FILTER:-*}"
 ```
 
+CI job `roslyn-floor` in `.github/workflows/ci.yml` calls the shared `roslyn-floor.yml` from
+ZeroAlloc-Net/.github. It packs `ZeroAlloc.Pipeline.slnx` and fails when a packed DLL references Roslyn
+above 5.0.0. Locally, pack with `-p:Version=9.9.9-local.<sha>` and read the references of
+`lib/netstandard2.0/ZeroAlloc.Pipeline.Generators.dll` in the package.
+
 Fast inner loop, run locally and passing, not a CI job:
 
 ```bash
@@ -77,6 +82,11 @@ dotnet test tests/ZeroAlloc.Pipeline.Generators.Tests -c Release -f net10.0 --fi
 - `TreatWarningsAsErrors` is on, together with `EnforceCodeStyleInBuild` and the Meziantou, Roslynator and
   ZeroAlloc analyzers. Those three apply to every target except `netstandard2.0`, so the generators
   project is not checked by them.
+- `ZeroAlloc.Pipeline.Generators` references `Microsoft.CodeAnalysis.CSharp` 5.0.0, the compiler of SDK band
+  10.0.1xx, the oldest supported SDK. The Mediator and Validation generators bundle this DLL, so its Roslyn
+  reference is their floor too: a compiler older than it skips them with `CS9057` and nothing is generated.
+  The shared Renovate preset holds it below 5.1. If a newer Roslyn API is needed, change the code; raise the
+  floor only together with the minimum SDK. The test project may use a newer Roslyn.
 - `LangVersion` is `latest`, but `netstandard2.0` code sees only that framework's BCL plus `Polyfills.cs`. Do not use
   a BCL API that is missing there without a conditional-compilation branch.
 - The hot path here is the code `PipelineEmitter` emits, not the emitter itself. The budget is exactly
